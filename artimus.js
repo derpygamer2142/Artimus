@@ -101,9 +101,7 @@ window.artimus = {
             return `#${hexR}${hexG}${hexB}`;
         }
 
-        constructor(overrideCSS) {
-            overrideCSS = overrideCSS || {};
-
+        constructor() {
             //Look for existing CUGI if one doesn't exist, add it.
             if (!window.CUGI) {
                 window.CUGI = {};
@@ -113,7 +111,7 @@ window.artimus = {
                 document.body.appendChild(CUGIScript);
             }
 
-            this.createLayout(overrideCSS);
+            this.createLayout();
             this.addControls();
 
             this.GL = this.canvas.getContext("2d");
@@ -123,7 +121,7 @@ window.artimus = {
             this.GL.imageSmoothingEnabled = false;
         }
 
-        createLayout(overrideCSS) {
+        createLayout() {
             //Create needed elements
             this.container = document.createElement("div");
             this.toolbar = document.createElement("div");
@@ -226,7 +224,7 @@ window.artimus = {
             }, { passive: false });
         }
 
-        getCanvasPosition(x, y) {
+        setCanvasPosition(x, y) {
             this.#scrollX = -x;
             this.#scrollX = -y;
         }
@@ -240,12 +238,24 @@ window.artimus = {
             this.toolbar.innerHTML = "";
             this.toolbar.appendChild(CUGI.createList(this.toolFunction.CUGI(this)));
         }
+
+        refreshTools() {
+
+        }
     },
 
-    inject: (element, overrideCSS) => {
+    activeWorkspaces: [],
+
+    globalRefreshTools: () => {
+        for (let workspaceID in artimus.activeWorkspaces) {
+            artimus.activeWorkspaces[workspaceID].refreshTools();
+        }
+    },
+
+    inject: (element) => {
         if (!(element instanceof HTMLElement)) return;
 
-        const workspace = new artimus.workspace(overrideCSS);
+        const workspace = new artimus.workspace();
         element.appendChild(workspace.container);
 
         return workspace;
