@@ -47,7 +47,7 @@ window.artimus = {
             });
         }
 
-        //Our own quickCSS function, for use outside of coffee engine.
+        //General helper functions ported from Coffee Engine
         quickCSS(element, css) {
             if (Array.isArray(element)) {
                 for (let elID in element) {
@@ -101,6 +101,19 @@ window.artimus = {
             return `#${hexR}${hexG}${hexB}`;
         }
 
+        //Host/Parasite relationship
+        host = document.createElement("div");
+
+        elementFromString(element) {
+            this.host.innerHTML = element;
+
+            //Remove the parasite
+            const parasite = this.host.children[0];
+            this.host.removeChild(parasite);
+            return parasite;
+        }
+
+        //Now for the meat and potatoes
         constructor() {
             //Look for existing CUGI if one doesn't exist, add it.
             if (!window.CUGI) {
@@ -119,23 +132,35 @@ window.artimus = {
             //I dunno, just no IE11
             //this.GL.translate(-0.5, -0.5);
             this.GL.imageSmoothingEnabled = false;
+
+            artimus.activeWorkspaces.push(this);
         }
 
         createLayout() {
             //Create needed elements
             this.container = document.createElement("div");
+            
             this.toolbar = document.createElement("div");
-            this.canvasArea = document.createElement("div");
+            this.toolbox = document.createElement("div");
+            this.toolPropertyHolder = document.createElement("div");
 
+            this.canvasArea = document.createElement("div");
             this.canvas = document.createElement("canvas");
             
             //Now we can style our children
             this.container.className = "artimus-container";
+
             this.toolbar.className = "artimus-toolbar";
+            this.toolbox.className = "artimus-toolbox";
+            this.toolPropertyHolder.className = "artimus-toolPropertyHolder";
+
             this.canvasArea.className = "artimus-canvasArea";
             this.canvas.className = "artimus-canvas";
             
             this.container.appendChild(this.toolbar);
+            this.toolbar.appendChild(this.toolbox);
+            this.toolbar.appendChild(this.toolPropertyHolder);
+
             this.container.appendChild(this.canvasArea);
             this.canvasArea.appendChild(this.canvas);
 
@@ -235,12 +260,48 @@ window.artimus = {
         }
 
         refreshToolOptions() {
-            this.toolbar.innerHTML = "";
-            this.toolbar.appendChild(CUGI.createList(this.toolFunction.CUGI(this)));
+            this.toolPropertyHolder.innerHTML = "";
+            this.toolPropertyHolder.appendChild(CUGI.createList(this.toolFunction.CUGI(this)));
         }
 
         refreshTools() {
+            this.toolbox.innerHTML = "";
+            for (let toolID in artimus.tools) {
+                const tool = artimus.tools[toolID];
 
+                const button = document.createElement("button");
+
+                //Set icon and text if needed
+                if (typeof tool.icon == "string") {
+                    let icon = null;
+
+                    //For svgs
+                    if (tool.icon.startsWith("<svg version=\"")) icon = this.elementFromString(tool.icon);
+                    else {
+                        icon = document.createElement("img");
+                        icon.src = tool.icon;
+                    }
+
+                    if (icon instanceof HTMLElement || icon instanceof SVGElement) {
+                        //? dunno why classname is not supported for SVG
+                        icon.classList = "artimus-toolIcon";
+                        button.appendChild(icon);
+                    }
+                }
+
+                //?Labels are easy but I'm going to group the append with the other append and classNames
+                const label = document.createElement("p");
+                label.innerText = tool.name || toolID;
+
+                button.onclick = () => {
+                    this.tool = toolID;
+                }
+
+                button.className = "artimus-tool";
+                label.className = "artimus-toolLabel";
+                this.toolbox.appendChild(button);
+                button.appendChild(label);
+            }
         }
     },
 

@@ -9,6 +9,8 @@
 }
 
 .artimus-toolbar {
+    display: grid;
+    grid-template-rows: 50% 50%;
     width: 200px;
 
     background-color: #e2e2ff;
@@ -29,6 +31,42 @@
     top: 50%;
     left: 50%;
     margin: 0%;
+}
+
+.artimus-toolbox {
+    margin: 8px;
+    padding: 4px;
+
+    border-radius: 16px;
+    background-color: #d0d0ff;
+}
+
+.artimus-toolPropertyHolder {
+    margin: 8px;
+    padding: 4px;
+
+    border-radius: 16px;
+    background-color: #d0d0ff;
+}
+
+.artimus-tool {
+    display: flex;
+    width: 100%;
+
+    justify-content: left;
+    align-items: center;
+}
+
+.artimus-toolIcon {
+    width: 32px;
+    height: 32px;
+
+    margin-right: 16px;
+}
+
+.artimus-toolLabel {
+    margin: 0px;
+    text-align: center;
 }
 
 .artimus-toolbar .CUGI-PropertyHolder {
