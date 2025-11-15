@@ -98,3 +98,7 @@
     font-family: monospace;
     font-weight: bold;
 }
+
+input[type="number"] {
+    width: 48px;
+}

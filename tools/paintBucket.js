@@ -5,9 +5,14 @@ artimus.tools.paintBucket = {
         return ((y * width) + x) * 4;
     },
 
+    mixMult: 1 / 255,
+
     mouseDown: (gl, x, y, toolProperties) => {
+        //Get image data as array here so we don't run continous calls
         const {data, width, height} = gl.getImageData(0,0, gl.canvas.width, gl.canvas.height);
+        const myColor = artimus.HexToRGB(toolProperties.fillColor);
         
+        //Get the target colour
         let targetCoord = artimus.tools.paintBucket.coordToColourID(x, y, width);
         const targetColor = [
             data[targetCoord],
@@ -16,19 +21,62 @@ artimus.tools.paintBucket = {
             data[targetCoord + 3]
         ]
 
-        let paintQueue = [[x, y]];
-        while (paintQueue.length > 0) {
-            paintQueue.pop();
+        //Make sure we aren't targeting ourselves (Infinite loop)
+        if (targetColor[0] == myColor.r && targetColor[1] == myColor.g && targetColor[2] == myColor.b && targetColor[3] == myColor.a) return;
+
+        //Our compare and set functions, these are used in propigation, we need to make sure to stop transparent stuff when working with non transparent pixels
+        const colorCompare = (toolProperties.respectTransparency && (targetColor[3] == 0)) ?
+            (() => (targetColor[0] == data[targetCoord] && targetColor[1] == data[targetCoord + 1] && targetColor[2] == data[targetCoord + 2] && data[targetCoord + 3] == targetColor[3]) || data[targetCoord + 3] < 240):
+            (() => (targetColor[0] == data[targetCoord] && targetColor[1] == data[targetCoord + 1] && targetColor[2] == data[targetCoord + 2] && targetColor[3] == data[targetCoord + 3]));
+
+        const colorSet = (toolProperties.respectTransparency && (targetColor[3] == 0)) ? () => {
+            const mix = (255 - data[targetCoord + 3]) * artimus.tools.paintBucket.mixMult;
+            data[targetCoord] += (myColor.r - data[targetCoord]) * mix;
+            data[targetCoord + 1] += (myColor.g - data[targetCoord + 1]) * mix;
+            data[targetCoord + 2] += (myColor.b - data[targetCoord + 2]) * mix;
+            data[targetCoord + 3] = 255;
+        } : () => {
+            data[targetCoord] = myColor.r;
+            data[targetCoord + 1] = myColor.g;
+            data[targetCoord + 2] = myColor.b;
+            data[targetCoord + 3] = myColor.a;
         }
+
+        //Queue related stuff to prevent backtracking
+        let paintQueue = [[x, y]];
+
+        const queueIncludes = (pos) => paintQueue.filter((comp) => comp[0] == pos[0] && comp[1] == pos[1]).length > 0;
+
+        //Go through the paint queue setting colours and getting next positions, finally ending when none are left
+        while (paintQueue.length > 0) {
+            let [ px, py ] = paintQueue[0];
+            targetCoord = artimus.tools.paintBucket.coordToColourID(px, py, width);
+            colorSet();
+
+            targetCoord = artimus.tools.paintBucket.coordToColourID(px - 1, py, width);
+            if ((px - 1) >= 0 && colorCompare() && !queueIncludes([px - 1, py])) paintQueue.push([px - 1, py]);
+            targetCoord = artimus.tools.paintBucket.coordToColourID(px + 1, py, width);
+            if ((px + 1) < width && colorCompare() && !queueIncludes([px + 1, py])) paintQueue.push([px + 1, py]);
+
+            targetCoord = artimus.tools.paintBucket.coordToColourID(px, py - 1, width);
+            if ((py - 1) >= 0 && colorCompare() && !queueIncludes([px, py - 1])) paintQueue.push([px, py - 1]);
+            targetCoord = artimus.tools.paintBucket.coordToColourID(px, py + 1, width);
+            if ((py + 1) < height && colorCompare() && !queueIncludes([px, py + 1])) paintQueue.push([px, py + 1]);
+
+            paintQueue.splice(0, 1);
+        }
+
+        //Blit
+        gl.putImageData(new ImageData(data, width, height), 0, 0);
     },
 
     CUGI:(artEditor) => { return [
-        { target: artEditor.toolProperties, key: "strokeColor", type: "color" },
+        { target: artEditor.toolProperties, key: "fillColor", type: "color" },
         { target: artEditor.toolProperties, key: "respectTransparency", type: "boolean" },
     ]},
 
     properties: {
-        strokeColor: "#000000",
+        fillColor: "#000000",
         respectTransparency: false,
     }
 }

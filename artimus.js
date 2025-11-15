@@ -1,6 +1,63 @@
 window.artimus = {
     tools: {},
 
+    HexToRGB: (Hex) => {
+        if (typeof Hex === "string") {
+            if (Hex.length > 7) {
+                const splitHex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(Hex) || [0,0,0,255];
+                return {
+                    r: parseInt(splitHex[1], 16),
+                    g: parseInt(splitHex[2], 16),
+                    b: parseInt(splitHex[3], 16),
+                    a: parseInt(splitHex[4], 16),
+                };
+            } else if (Hex.length > 5) {
+                const splitHex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(Hex);
+                return {
+                    r: parseInt(splitHex[1], 16),
+                    g: parseInt(splitHex[2], 16),
+                    b: parseInt(splitHex[3], 16),
+                    a: 255,
+                };
+            } else {
+                const splitHex = /^#?([a-f\d]{1})([a-f\d]{1})([a-f\d]{1})$/i.exec(Hex);
+                return {
+                    r: parseInt(splitHex[1], 16),
+                    g: parseInt(splitHex[2], 16),
+                    b: parseInt(splitHex[3], 16),
+                    a: 255,
+                };
+            }
+        }
+
+        return {
+            r: Math.floor(Hex / 65536),
+            g: Math.floor(Hex / 256) % 256,
+            b: Hex % 256,
+            a: 255,
+        };
+    },
+
+    RGBtoHex: (RGB) => {
+        let hexR = Math.floor(RGB.r).toString(16);
+        let hexG = Math.floor(RGB.g).toString(16);
+        let hexB = Math.floor(RGB.b).toString(16);
+
+        if (hexR.length == 1) hexR = "0" + hexR;
+        if (hexG.length == 1) hexG = "0" + hexG;
+        if (hexB.length == 1) hexB = "0" + hexB;
+
+        //Transparency
+        if (RGB.a) {
+            let hexA = Math.floor(RGB.a).toString(16);
+            if (hexA.length == 1) hexA = "0" + hexA;
+
+            return `#${hexR}${hexG}${hexB}${hexA.toLowerCase() == "ff" ? "" : hexA}`;
+        }
+
+        return `#${hexR}${hexG}${hexB}`;
+    },
+
     workspace: class {
         //Scrolling
         #scrollX = 0;
@@ -80,26 +137,6 @@ window.artimus = {
             }
 
             return element;
-        }
-
-        RGBtoHex(RGB) {
-            let hexR = Math.floor(RGB.r).toString(16);
-            let hexG = Math.floor(RGB.g).toString(16);
-            let hexB = Math.floor(RGB.b).toString(16);
-
-            if (hexR.length == 1) hexR = "0" + hexR;
-            if (hexG.length == 1) hexG = "0" + hexG;
-            if (hexB.length == 1) hexB = "0" + hexB;
-
-            //Transparency
-            if (RGB.a) {
-                let hexA = Math.floor(RGB.a).toString(16);
-                if (hexA.length == 1) hexA = "0" + hexA;
-
-                return `#${hexR}${hexG}${hexB}${hexA.toLowerCase() == "ff" ? "" : hexA}`;
-            }
-
-            return `#${hexR}${hexG}${hexB}`;
         }
 
         //Host/Parasite relationship
@@ -184,7 +221,7 @@ window.artimus = {
 
                     case 2:
                         const [red, green, blue, alpha] = this.GL.getImageData(...this.getCanvasPosition(event.clientX, event.clientY, true), 1, 1).data;
-                        const converted = this.RGBtoHex({ r:red, g:green, b:blue, a:alpha });
+                        const converted = artimus.RGBtoHex({ r:red, g:green, b:blue, a:alpha });
 
                         this.toolProperties.strokeColor = converted;
                         this.toolProperties.fillColor = converted;
