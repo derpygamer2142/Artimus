@@ -74,6 +74,33 @@ artimus.tools.paintBrush = {
         }
     },
 
+    preview: (gl, x, y, toolProperties) => {
+        //if (toolProperties.pixelBrush) { x--; y--; };
+        //Set stroke properties
+        gl.lineCap = "round";
+        gl.lineJoin = "round";
+        gl.lineWidth = toolProperties.strokeSize;
+        gl.strokeStyle = toolProperties.strokeColor;
+        gl.fillStyle = toolProperties.strokeColor;
+
+        //For the smooth brush
+        if (!toolProperties.pixelBrush) {
+            gl.moveTo(x,y);
+            gl.beginPath();
+            gl.lineTo(x,y);
+            gl.stroke();
+            gl.closePath();
+        }
+        else {
+            //Calculations
+            const halfSize = Math.floor(toolProperties.strokeSize / 2);
+            const rx = x - halfSize;
+            const ry = y - halfSize;
+
+            gl.fillRect(rx,ry,toolProperties.strokeSize,toolProperties.strokeSize);
+        }
+    },
+
     CUGI:(artEditor) => { return [
         { target: artEditor.toolProperties, key: "strokeColor", type: "color" },
         { target: artEditor.toolProperties, key: "strokeSize", type: "int" },

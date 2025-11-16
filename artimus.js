@@ -91,10 +91,68 @@ window.artimus = {
 
             this.#tool = value;
             this.refreshToolOptions();
+
+            //We also want to clear the previewGL
+            if (this.toolFunction.preview) this.previewGL.clearRect(0, 0, this.width, this.height);
         }
         get tool() { return this.#tool; }
 
         toolProperties = {};
+
+        #width = 300;
+        set width(value) {
+            this.#width = value;
+            this.canvas.width = value;
+            this.editingCanvas.width = value;
+            this.previewCanvas.width = value;
+        }
+        get width() {
+            return this.#width;
+        }
+
+        #height = 150;
+        set height(value) {
+            this.#height = value;
+            this.canvas.height = value;
+            this.editingCanvas.height = value;
+            this.previewCanvas.height = value;
+        }
+        get height() {
+            return this.#height;
+        }
+
+        #currentLayer = 0;
+        set currentLayer(value) {
+            //Save current data to the layer position
+            const oldLayer = this.layers[this.#currentLayer];
+            const { name, element, bitmap } = oldLayer;
+
+            //Clean up data and save layer data to previous layer.
+            if (bitmap) bitmap.close();
+            this.layers[this.#currentLayer] = this.GL.getImageData(0, 0, this.width, this.height);
+            this.layers[this.#currentLayer].name = name;
+            this.layers[this.#currentLayer].element = element;
+            
+            createImageBitmap(this.layers[this.#currentLayer]).then(newBitmap => {
+                this.layers[this.#currentLayer].bitmap = newBitmap;
+                this.#currentLayer = value;
+
+                //Now setup stuff we need/want like blitting the newly selected layer onto the editing canvas
+                const current = this.layers[this.#currentLayer];
+                this.GL.putImageData(current, 0, 0);
+
+                element.className = this.layerClass;
+                current.element.className = this.layerClass + this.layerClassSelected;
+            });
+        }
+        get currentLayer() {
+            return this.#currentLayer;
+        }
+
+        toolClass = "artimus-sideBarButton artimus-tool ";
+        layerClass = "artimus-sideBarButton artimus-layer ";
+        toolClassSelected = "artimus-sideBarButton-selected artimus-tool-selected ";
+        layerClassSelected = "artimus-sideBarButton-selected artimus-layer-selected ";
 
         updatePosition() {
             //Setup some CSS
@@ -165,13 +223,50 @@ window.artimus = {
             this.createLayout();
             this.addControls();
 
-            this.GL = this.canvas.getContext("2d");
+            //Create layers
+            this.layers = [];
+
+            //For editing
+            this.editingCanvas = document.createElement("canvas");
+            this.previewCanvas = document.createElement("canvas");
+
+            this.width = 640;
+            this.height = 480;
+            this.createLayer();
+
+            this.GL = this.editingCanvas.getContext("2d");
+            this.fullviewGL = this.canvas.getContext("2d");
+            this.previewGL = this.previewCanvas.getContext("2d");
+
             //Sometimes we need this. Sometimes we don't?
             //I dunno, just no IE11
             //this.GL.translate(-0.5, -0.5);
             this.GL.imageSmoothingEnabled = false;
 
             artimus.activeWorkspaces.push(this);
+
+            const workspace = this;
+            const loop = () => {
+                if (!workspace) return;
+
+                workspace.renderLoop.call(workspace);
+                requestAnimationFrame(loop);
+            }
+
+            loop();
+        }
+
+        renderLoop() {
+            this.fullviewGL.clearRect(0, 0, this.width, this.height);
+            for (let layerID in this.layers) {
+                if (layerID == this.currentLayer) this.fullviewGL.drawImage(this.editingCanvas, 0, 0);
+                else {
+                    const bitmap = this.layers[layerID].bitmap;
+                    if (bitmap instanceof ImageBitmap) this.fullviewGL.drawImage(bitmap, 0, 0);
+                }
+            }
+
+            this.fullviewGL.drawImage(this.previewCanvas, 0, 0);
         }
 
         createLayout() {
@@ -181,6 +276,7 @@ window.artimus = {
             this.toolbar = document.createElement("div");
             this.toolbox = document.createElement("div");
             this.toolPropertyHolder = document.createElement("div");
+            this.layerHolder = document.createElement("div");
 
             this.canvasArea = document.createElement("div");
             this.canvas = document.createElement("canvas");
@@ -189,8 +285,9 @@ window.artimus = {
             this.container.className = "artimus-container";
 
             this.toolbar.className = "artimus-toolbar";
-            this.toolbox.className = "artimus-toolbox";
-            this.toolPropertyHolder.className = "artimus-toolPropertyHolder";
+            this.toolbox.className = "artimus-sideBarList artimus-toolbox";
+            this.toolPropertyHolder.className = "artimus-sideBarList artimus-toolPropertyHolder";
+            this.layerHolder.className = "artimus-sideBarList artimus-layerHolder";
 
             this.canvasArea.className = "artimus-canvasArea";
             this.canvas.className = "artimus-canvas";
@@ -198,6 +295,7 @@ window.artimus = {
             this.container.appendChild(this.toolbar);
             this.toolbar.appendChild(this.toolbox);
             this.toolbar.appendChild(this.toolPropertyHolder);
+            this.toolbar.appendChild(this.layerHolder);
 
             this.container.appendChild(this.canvasArea);
             this.canvasArea.appendChild(this.canvas);
@@ -234,18 +332,31 @@ window.artimus = {
                         break;
                 }
             });
+
+            //For instances of the mouse being up or gone we want to clear the preview GL.
             this.canvas.addEventListener("mouseup", (event) => {
                 if (event.button != 0) return;
                 
+                if (this.toolFunction.preview) this.previewGL.clearRect(0, 0, this.width, this.height);
                 if (this.toolFunction.mouseUp && this.toolDown) this.toolFunction.mouseUp(this.GL, ...this.getCanvasPosition(event.clientX, event.clientY), this.toolProperties);
                 this.toolDown = false; 
             });
             this.canvas.addEventListener("mouseout", (event) => { 
+
+                if (this.toolFunction.preview) this.previewGL.clearRect(0, 0, this.width, this.height);
                 if (this.toolFunction.mouseUp && this.toolDown) this.toolFunction.mouseUp(this.GL, ...this.getCanvasPosition(event.clientX, event.clientY), this.toolProperties);
                 this.toolDown = false; 
             });
             this.canvas.addEventListener("mousemove", (event) => {
-                if (this.toolDown && this.toolFunction.mouseMove) this.toolFunction.mouseMove(this.GL, ...this.getCanvasPosition(event.clientX, event.clientY), event.movementX / this.zoom, event.movementY / this.zoom, this.toolProperties);
+                const position = this.getCanvasPosition(event.clientX, event.clientY);
+                
+                if (this.toolFunction.preview) {
+                    //For previews
+                    this.previewGL.clearRect(0, 0, this.width, this.height);
+                    this.toolFunction.preview(this.previewGL, ...position, this.toolProperties);
+                }
+
+                if (this.toolDown && this.toolFunction.mouseMove) this.toolFunction.mouseMove(this.GL, ...position, event.movementX / this.zoom, event.movementY / this.zoom, this.toolProperties);
             });
 
             //Add movement
@@ -337,19 +448,56 @@ window.artimus = {
 
                 button.onclick = () => {
                     this.tool = toolID;
-                    button.className = "artimus-tool artimus-tool-selected";
+                    button.className = this.toolClass + this.toolClassSelected;
 
                     //Set the last selected to not be selected
-                    if (this.selectedElement) this.selectedElement.className = "artimus-tool";
+                    if (this.selectedElement) this.selectedElement.className = this.toolClass;
 
                     this.selectedElement = button;
                 }
 
-                button.className = (toolID == this.tool) ? "artimus-tool artimus-tool-selected" : "artimus-tool";
+                button.className = (toolID == this.tool) ? this.toolClass + this.toolClassSelected : this.toolClass;
                 label.className = "artimus-toolLabel";
                 this.toolbox.appendChild(button);
                 button.appendChild(label);
             }
+        }
+
+        setLayer(ID) {
+            if (typeof ID == "string") {
+                const locID = this.layers.findIndex((layer) => layer.name == ID);
+                if (locID != -1) ID = locID;
+            }
+
+            if (typeof ID == "number") {
+                this.currentLayer = ID;
+            }
+        }
+
+        createLayer(name, at) {
+            name = name || ("Layer " + (this.layers.length + 1));
+
+            const layerData = new ImageData(this.canvas.width, this.canvas.height);
+            createImageBitmap(layerData).then(bitmap => {
+                layerData.name = name;
+                layerData.bitmap = bitmap;
+                
+                layerData.element = document.createElement("button");
+                layerData.element.innerText = name;
+                layerData.element.className = this.layerClass;
+                layerData.element.onclick = () => {
+                    this.setLayer(name);
+                }
+
+                if (at) this.layers.splice(Math.max(0, Math.min(at, this.layers.length)), 0, layerData);
+                else {
+                    this.layers.push(layerData);
+                    this.layerHolder.appendChild(layerData.element);
+                }
+
+                //Finally use the new layer
+                this.setLayer(name);
+            });
         }
     },
 

@@ -28,6 +28,21 @@ artimus.tools.eraser = {
     },
     mouseUp: (gl, x, y, toolProperties) => {},
 
+    preview: (gl, x, y, toolProperties) => {
+        //Calculations
+        const halfSize = Math.floor(toolProperties.strokeSize / 2);
+        const rx = x - halfSize;
+        const ry = y - halfSize;
+
+        gl.fillStyle = getComputedStyle(document.body).getPropertyValue("--artimus-eraser-outline");
+        gl.fillRect(rx,ry,toolProperties.strokeSize,toolProperties.strokeSize);
+
+        if (toolProperties.strokeSize >= 3) {
+            gl.fillStyle = getComputedStyle(document.body).getPropertyValue("--artimus-eraser-inline");
+            gl.fillRect(rx + 1,ry + 1,toolProperties.strokeSize - 2,toolProperties.strokeSize - 2);
+        }
+    },
+
     CUGI:(artEditor) => { return [
         { target: artEditor.toolProperties, key: "strokeSize", type: "int" },
     ]},
