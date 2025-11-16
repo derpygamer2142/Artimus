@@ -88,6 +88,7 @@ artimus.tools.paintBrush = {
             gl.moveTo(x,y);
             gl.beginPath();
             gl.lineTo(x,y);
+            gl.lineTo(x + 0.1,y + 0.1);
             gl.stroke();
             gl.closePath();
         }

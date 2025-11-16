@@ -1,3 +1,8 @@
+body {
+    --artimus-eraser-outline: #438eff;
+    --artimus-eraser-inline: #d0d0ff;
+}
+
 .artimus-container {
     display: grid;
     grid-template-columns: 200px 1fr;
@@ -10,7 +15,7 @@
 
 .artimus-toolbar {
     display: grid;
-    grid-template-rows: 50% 50%;
+    grid-template-rows: 33.3333% 33.3333% 33.3333%;
     width: 200px;
 
     background-color: #e2e2ff;
@@ -33,48 +38,79 @@
     margin: 0%;
 }
 
-.artimus-toolbox {
+.artimus-sideBarList {
     margin: 8px;
     padding: 4px;
 
     border-radius: 16px;
     background-color: #d0d0ff;
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: auto;
 }
 
-.artimus-toolPropertyHolder {
-    margin: 8px;
-    padding: 4px;
+.artimus-layerHolder {
+    flex-direction: column-reverse;
+}
+
+.artimus-layerWrapper {
+    display: flex;
+}
+
+.artimus-layerCreationHolder {
+    height: 24px;
+    display: grid;
+    max-width: 100%;
+    grid-template-columns: calc(100% - 24px) 24px;
+}
+
+.artimus-button {
+    background-color: #e2e2ff;
+    transition: 300ms background-color;
+}
+
+.artimus-button:hover {
+    background-color: #c2c2ff;
+}
+
+.artimus-button:active {
+    background-color: #438eff;
+    transition: 0ms background-color;
+}
+
+.artimus-layerCreationButton {
+    border-radius: 8px;
+    border-width: 0px;
+}
+
+.artimus-layerCreationName {
+    width: calc(100% - 12px);
+}
+
+.artimus-layerButton {
+    width: auto;
+    aspect-ratio: 1;
+    height: 24px;
 
     border-radius: 16px;
-    background-color: #d0d0ff;
+    border-width: 0px;
 }
 
-.artimus-tool {
+.artimus-sideBarButton {
     display: flex;
     width: 100%;
 
     justify-content: left;
     align-items: center;
 
-    background-color: #e2e2ff;
     border-width: 0px;
     border-radius: 16px;
-
-    transition: 300ms background-color;
 
     margin-bottom: 4px;
 }
 
-.artimus-tool:hover {
-    background-color: #c2c2ff;
-}
-
-.artimus-tool:active {
-    transition: 0ms background-color;
-    background-color: #6a6aff;
-}
-
-.artimus-tool-selected {
+.artimus-sideBarButton-selected {
     background-color: #aaaaff;
 }
 
@@ -90,8 +126,12 @@
     text-align: center;
 }
 
+.artimus-layer {
+    margin: 0px;
+}
+
 .artimus-toolbar .CUGI-PropertyHolder {
-    display : flex;
+    display: flex;
     margin: 2px;
     padding: 0px;
 
