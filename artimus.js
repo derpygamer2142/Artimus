@@ -493,7 +493,7 @@ window.artimus = {
             }
         }
 
-        createLayer(name, at) {
+        createLayer(name) {
             name = name || ("Layer " + (this.layers.length + 1));
 
             const layerData = new ImageData(this.canvas.width, this.canvas.height);
@@ -576,16 +576,19 @@ window.artimus = {
                 if (ID == this.currentLayer) {
                     this.#currentLayer = target;
                 }
+                else if (target == this.currentLayer) {
+                    this.#currentLayer = ID;
+                }
 
                 const parent = elFrom.parentElement;
 
                 if (ID == target - 1) {
-                    parent.removeChild(elFrom);
-                    parent.insertBefore(elFrom, elTo);
+                    parent.removeChild(elTo);
+                    parent.insertBefore(elTo, elFrom);
                 }
                 else if (target == ID - 1) {
-                    parent.removeChild(elTo);
-                    parent.insertBefore(elTo, elFrom);                    
+                    parent.removeChild(elFrom);
+                    parent.insertBefore(elFrom, elTo);  
                 }
                 else {
                     parent.removeChild(elFrom);
@@ -597,9 +600,6 @@ window.artimus = {
                     if (ID + 1 >= this.layers.length) parent.appendChild(elTo);
                     else parent.insertBefore(elTo, this.layers[ID + 1].element);
                 }
-
-                console.log(this.layers[target + 1]);
-                console.log(this.layers[ID + 1]);
             }
         }
 
