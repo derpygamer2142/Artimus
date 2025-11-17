@@ -100,39 +100,22 @@ window.artimus = {
         toolProperties = {};
 
         #width = 300;
-        set width(value) {
-            this.#width = value;
-            this.canvas.width = value;
-            this.editingCanvas.width = value;
-            this.previewCanvas.width = value;
-        }
-        get width() {
-            return this.#width;
-        }
+        set width(value) { this.resize(value, this.height); }
+        get width() { return this.#width; }
 
         #height = 150;
-        set height(value) {
-            this.#height = value;
-            this.canvas.height = value;
-            this.editingCanvas.height = value;
-            this.previewCanvas.height = value;
-        }
-        get height() {
-            return this.#height;
-        }
+        set height(value) { this.resize(this.width, value); }
+        get height() { return this.#height; }
 
         #currentLayer = 0;
         set currentLayer(value) {
             //Save current data to the layer position
             const oldLayer = this.layers[this.#currentLayer];
-            const { name, element, label, bitmap } = oldLayer;
+            const label = oldLayer.label;
 
             //Clean up data and save layer data to previous layer.
-            if (bitmap) bitmap.close();
             this.layers[this.#currentLayer] = this.GL.getImageData(0, 0, this.width, this.height);
-            this.layers[this.#currentLayer].name = name;
-            this.layers[this.#currentLayer].element = element;
-            this.layers[this.#currentLayer].label = label;
+            this.transferLayerData(oldLayer, this.layers[this.#currentLayer]);
             
             this.updateLayer(this.#currentLayer, () => {
                 this.#currentLayer = value;
@@ -488,6 +471,33 @@ window.artimus = {
             }
         }
 
+        resize(width, height) {
+            if (width < 1 || typeof width != "number") width = 1;
+            if (height < 1 || typeof height != "number") height = 1;
+
+            this.#width = width;
+            this.#height = height;
+
+            //Get editing data before resizing due to resizing removing all image data;
+            const editingData = (this.GL) ? this.GL.getImageData(0, 0, this.width, this.height) : null;
+
+            this.canvas.width = width;
+            this.canvas.height = height;
+
+            this.previewCanvas.width = width;
+            this.previewCanvas.height = height;
+            
+            this.editingCanvas.width = width;
+            this.editingCanvas.height = height;
+
+            //resize layers
+            if (this.GL) {
+                for (let index = 0; index < this.layers.length; index++) {
+                    this.resizeLayer(index, this.#width, this.#height, editingData);
+                }
+            }
+        }
+
         setLayer(ID) {
             if (typeof ID == "string") {
                 const locID = this.layers.findIndex((layer) => layer.name == ID);
@@ -616,10 +626,57 @@ window.artimus = {
             }
 
             if (typeof ID == "number") {
+                if (this.layers[ID].bitmap) this.layers[ID].bitmap.close();
+
                 createImageBitmap(this.layers[ID]).then(newBitmap => {
                     this.layers[ID].bitmap = newBitmap;
                     if (then) then(newBitmap);
                 });
+            }
+        }
+
+        transferLayerData(from, to) {
+            to.name = from.name;
+            to.element = from.element;
+            to.label = from.label;
+        }
+
+        resizeLayer(ID, width, height, editingData) {
+            if (typeof ID == "string") {
+                const locID = this.layers.findIndex((layer) => layer.name == ID);
+                if (locID != -1) ID = locID;
+            }
+
+            if (typeof ID == "number") {
+                const layer = (this.currentLayer == ID) ? editingData : this.layers[ID];
+                if (this.currentLayer == ID) this.transferLayerData(this.layers[ID], layer);
+
+                //Get needed attributes for the transfer
+                const output = new ImageData(width, height);
+                const readWidth = Math.min(width, layer.width);
+                const readHeight = Math.min(height, layer.height);
+
+                //Transfer data
+                for (let y = 0; y < readHeight; y++) {
+                    for (let x = 0; x < readWidth; x++) {
+                        const lID = ((y * layer.width) + x) * 4;
+                        const oID = ((y * output.width) + x) * 4;
+                        output.data[oID] = layer.data[lID];
+                        output.data[oID + 1] = layer.data[lID + 1];
+                        output.data[oID + 2] = layer.data[lID + 2];
+                        output.data[oID + 3] = layer.data[lID + 3];
+                    }
+                }
+                
+                //Blit image data to editing canvas if needed
+                if (this.currentLayer == ID) {
+                    this.GL.putImageData(output, 0, 0);
+                }
+
+                //Add the layer back and update the bitmap.
+                this.transferLayerData(layer, output);
+                this.layers[ID] = output;
+                this.updateLayer(ID);
             }
         }
 
