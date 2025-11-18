@@ -130,17 +130,23 @@ body {
     height: 32px;
 
     margin-right: 16px;
+
+    pointer-events: none;
 }
 
 .artimus-toolLabel {
     margin: 0px;
     text-align: center;
+
+    pointer-events: none;
 }
 
 .artimus-layer {
     margin: 0px;
 }
 
+
+/* CUGI items */
 .artimus-toolbar .CUGI-PropertyHolder {
     display: flex;
     margin: 2px;
@@ -152,4 +158,40 @@ body {
 
 input[type="number"] {
     width: 48px;
+}
+
+.CUGI-Label {
+    margin: 2px;
+}
+
+.CUGI-Popup {
+    position: absolute;
+
+    left: var(--x);
+    top: var(--y);
+
+    background-color: #dfdfdf;
+    border-width: 2px;
+    border-radius: 20px;
+    border-color: #cfcfcf;
+    border-style: solid;
+
+    z-index: 99999;
+
+    animation: 5s CUGI-Popup-Open ease-out;
+    overflow: hidden;
+}
+
+.CUGI-Button {
+    width: 100%;
+    text-align: left;
+}
+
+@keyframes CUGI-Popup-Open {
+    0% {
+        max-height: 0%;
+    }
+    100% {
+        max-height: 100%;
+    }
 }

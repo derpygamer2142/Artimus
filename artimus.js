@@ -91,7 +91,7 @@ window.artimus = {
             if (artimus.tools[value]) this.toolFunction = artimus.tools[value];
             else this.toolFunction = {};
 
-            Object.assign(this.toolProperties, this.toolFunction.properties);
+            this.toolProperties = Object.assign({},this.toolFunction.properties, this.toolProperties);
 
             this.#tool = value;
             this.refreshToolOptions();
@@ -203,7 +203,7 @@ window.artimus = {
                 window.CUGI = {};
 
                 const CUGIScript = document.createElement("script");
-                CUGIScript.src = "https://coffee-engine.github.io/CUGI/CUGI.js";
+                CUGIScript.src = "https://coffee-engine.github.io/CUGI/dist/CUGI.js";
                 document.body.appendChild(CUGIScript);
             }
 
@@ -460,12 +460,25 @@ window.artimus = {
 
                 button.onclick = () => {
                     this.tool = toolID;
-                    button.className = this.toolClass + this.toolClassSelected;
 
                     //Set the last selected to not be selected
                     if (this.selectedElement) this.selectedElement.className = this.toolClass;
+                    button.className = this.toolClass + this.toolClassSelected;
 
                     this.selectedElement = button;
+                }
+
+                button.CUGI_CONTEXT = () => {
+                    return [
+                        { type: "button", text: "use", onclick: () => {
+                            button.onclick();
+                        }},
+                        { type: "button", text: "useWithDefaults", onclick: () => {
+                            button.onclick();
+                            this.toolProperties = Object.assign(this.toolProperties, this.toolFunction.properties);
+                            this.refreshToolOptions();
+                        }}
+                    ];
                 }
 
                 button.className = (toolID == this.tool) ? this.toolClass + this.toolClassSelected : this.toolClass;
