@@ -1,6 +1,10 @@
 window.artimus = {
     tools: {},
 
+    iRandRange: (min, max) => {
+        return Math.floor(Math.random() * (max - min)) + min;
+    },
+
     HexToRGB: (Hex) => {
         if (typeof Hex === "string") {
             if (Hex.length > 7) {
@@ -48,7 +52,7 @@ window.artimus = {
         if (hexB.length == 1) hexB = "0" + hexB;
 
         //Transparency
-        if (RGB.a) {
+        if (typeof RGB.a == "number") {
             let hexA = Math.floor(RGB.a).toString(16);
             if (hexA.length == 1) hexA = "0" + hexA;
 
