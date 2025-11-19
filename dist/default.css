@@ -92,6 +92,11 @@ body {
     background-color: var(--artimus-button-normal);
     color: var(--artimus-text);
     transition: 300ms background-color;
+
+    border-width: 2px;
+    border-style: solid;
+    border-color: var(--artimus-button-hover);
+    border-radius: 16px;
 }
 
 .artimus-button:hover {
