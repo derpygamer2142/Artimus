@@ -114,25 +114,7 @@ window.artimus = {
 
         #currentLayer = 0;
         set currentLayer(value) {
-            //Save current data to the layer position
-            const oldLayer = this.layers[this.#currentLayer];
-            const label = oldLayer.label;
-
-            //Clean up data and save layer data to previous layer.
-            this.layers[this.#currentLayer] = this.GL.getImageData(0, 0, this.width, this.height);
-            this.transferLayerData(oldLayer, this.layers[this.#currentLayer]);
-
-            this.updateLayer(this.#currentLayer, () => {
-                this.#currentLayer = value;
-
-                //Now setup stuff we need/want like blitting the newly selected layer onto the editing canvas
-                const current = this.layers[this.#currentLayer];
-                this.GL.putImageData(current, 0, 0);
-                this.layerHistory = [this.GL.getImageData(0, 0, this.width, this.height)];
-
-                label.className = this.layerClass;
-                current.label.className = this.layerClass + this.layerClassSelected;
-            });
+            this.setLayer(value);
         }
         get currentLayer() {
             return this.#currentLayer;
@@ -229,6 +211,9 @@ window.artimus = {
             this.GL = this.editingCanvas.getContext("2d", { willReadFrequently: true });
             this.fullviewGL = this.canvas.getContext("2d");
             this.previewGL = this.previewCanvas.getContext("2d");
+
+            this.fileReader = new FileReader();
+            this.fileReader.onload = () => { this.onImageLoad(); };
 
             //Sometimes we need this. Sometimes we don't?
             //I dunno, just no IE11
@@ -515,14 +500,34 @@ window.artimus = {
         }
 
         //Layer manipulation, for use inside of the library itself but exposed for people to use for their own purposes
-        setLayer(ID) {
+        setLayer(ID, then) {
             if (typeof ID == "string") {
                 const locID = this.layers.findIndex((layer) => layer.name == ID);
                 if (locID != -1) ID = locID;
             }
 
             if (typeof ID == "number") {
-                this.currentLayer = ID;
+                //Save current data to the layer position
+                const oldLayer = this.layers[this.#currentLayer];
+                const label = oldLayer.label;
+
+                //Clean up data and save layer data to previous layer.
+                this.layers[this.#currentLayer] = this.GL.getImageData(0, 0, this.width, this.height);
+                this.transferLayerData(oldLayer, this.layers[this.#currentLayer]);
+
+                this.updateLayer(this.#currentLayer, () => {
+                    this.#currentLayer = ID;
+
+                    //Now setup stuff we need/want like blitting the newly selected layer onto the editing canvas
+                    const current = this.layers[this.#currentLayer];
+                    this.GL.putImageData(current, 0, 0);
+                    this.layerHistory = [this.GL.getImageData(0, 0, this.width, this.height)];
+
+                    label.className = this.layerClass;
+                    current.label.className = this.layerClass + this.layerClassSelected;
+
+                    if (then) then();
+                });
             }
         }
 
@@ -781,7 +786,7 @@ window.artimus = {
             this.GL.putImageData(this.layerHistory[this.historyIndex], 0, 0);
         }
 
-        new(width, height) {
+        new(width, height, then) {
             //Remove layers
             this.#currentLayer = 0;
             for (let ID = this.layers.length - 1; ID > 0; ID--) {
@@ -793,10 +798,29 @@ window.artimus = {
             this.updateLayer(this.#currentLayer, () => {
                 this.resize(width, height);
                 this.currentLayer = 0;
+
+                if (then) then();
             });
 
             this.historyIndex = 0;
             this.layerHistory = [];
+        }
+
+        importFromPC(image) {
+            this.fileReader.readAsDataURL(image);
+        }
+
+        onImageLoad() {
+            const image = new Image();
+            image.onload = () => {
+                this.new(image.width, image.height, () => {
+                    this.setLayer(0, () => {
+                        this.GL.drawImage(image, 0, 0);
+                    });
+                });
+            }
+
+            image.src = this.fileReader.result;
         }
 
         export() {
