@@ -33,7 +33,7 @@
             </cugi-dropdown>
             <cugi-dropdown>Sprite
                 <cugi-option>{ type: "button", text: "Resize", onclick: () => {
-                    console.log("hello");
+                    artimus.activeWorkspaces[0].resize(64, 64);
                 }}</cugi-option>
                 <cugi-option>{ type: "button", text: "Undo (ctrl + z)", onclick: () => {
                     artimus.activeWorkspaces[0].undo();

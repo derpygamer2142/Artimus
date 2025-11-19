@@ -783,16 +783,20 @@ window.artimus = {
 
         new(width, height) {
             //Remove layers
-            this.currentLayer = 0;
+            this.#currentLayer = 0;
             for (let ID = this.layers.length - 1; ID > 0; ID--) {
                 this.removeLayer(Number(ID));
             }
 
             //Then clear our current layer
             this.GL.clearRect(0, 0, this.width, this.height);
-            this.updateLayer(this.currentLayer, () => {
+            this.updateLayer(this.#currentLayer, () => {
                 this.resize(width, height);
+                this.currentLayer = 0;
             });
+
+            this.historyIndex = 0;
+            this.layerHistory = [];
         }
 
         export() {
