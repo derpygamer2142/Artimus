@@ -51,17 +51,21 @@ artimus.tools.paintBucket = {
         while (paintQueue.length > 0) {
             let [ px, py ] = paintQueue[0];
             targetCoord = artimus.tools.paintBucket.coordToColourID(px, py, width);
+            const isTransparent = data[targetCoord + 3] == 0 || data[targetCoord + 3 == 255];
+
             colorSet();
 
-            targetCoord = artimus.tools.paintBucket.coordToColourID(px - 1, py, width);
-            if ((px - 1) >= 0 && colorCompare() && !queueIncludes([px - 1, py])) paintQueue.push([px - 1, py]);
-            targetCoord = artimus.tools.paintBucket.coordToColourID(px + 1, py, width);
-            if ((px + 1) < width && colorCompare() && !queueIncludes([px + 1, py])) paintQueue.push([px + 1, py]);
+            if (isTransparent) {
+                targetCoord = artimus.tools.paintBucket.coordToColourID(px - 1, py, width);
+                if ((px - 1) >= 0 && colorCompare() && !queueIncludes([px - 1, py])) paintQueue.push([px - 1, py]);
+                targetCoord = artimus.tools.paintBucket.coordToColourID(px + 1, py, width);
+                if ((px + 1) < width && colorCompare() && !queueIncludes([px + 1, py])) paintQueue.push([px + 1, py]);
 
-            targetCoord = artimus.tools.paintBucket.coordToColourID(px, py - 1, width);
-            if ((py - 1) >= 0 && colorCompare() && !queueIncludes([px, py - 1])) paintQueue.push([px, py - 1]);
-            targetCoord = artimus.tools.paintBucket.coordToColourID(px, py + 1, width);
-            if ((py + 1) < height && colorCompare() && !queueIncludes([px, py + 1])) paintQueue.push([px, py + 1]);
+                targetCoord = artimus.tools.paintBucket.coordToColourID(px, py - 1, width);
+                if ((py - 1) >= 0 && colorCompare() && !queueIncludes([px, py - 1])) paintQueue.push([px, py - 1]);
+                targetCoord = artimus.tools.paintBucket.coordToColourID(px, py + 1, width);
+                if ((py + 1) < height && colorCompare() && !queueIncludes([px, py + 1])) paintQueue.push([px, py + 1]);
+            }
 
             paintQueue.splice(0, 1);
         }
