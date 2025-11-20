@@ -51,7 +51,7 @@ artimus.tools.paintBucket = {
         while (paintQueue.length > 0) {
             let [ px, py ] = paintQueue[0];
             targetCoord = artimus.tools.paintBucket.coordToColourID(px, py, width);
-            const isTransparent = data[targetCoord + 3] == 0 || data[targetCoord + 3 == 255];
+            const isTransparent = data[targetCoord + 3] == 0 || data[targetCoord + 3] == 255;
 
             colorSet();
 
