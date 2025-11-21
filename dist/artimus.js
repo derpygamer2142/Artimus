@@ -209,27 +209,18 @@ window.artimus = {
             //For editing
             this.editingCanvas = document.createElement("canvas");
             this.previewCanvas = document.createElement("canvas");
-
-            this.width = 640;
-            this.height = 480;
-            this.createLayer();
+            this.gridCanvas = document.createElement("canvas");
 
             this.GL = this.editingCanvas.getContext("2d", { willReadFrequently: true });
             this.fullviewGL = this.canvas.getContext("2d");
             this.previewGL = this.previewCanvas.getContext("2d");
+            this.gridGL = this.gridCanvas.getContext("2d");
 
+            this.resize(640, 480);
+            this.createLayer();
 
             this.fileReader = new FileReader();
             this.fileReader.onload = () => { this.onImageLoad(); };
-
-            //Sometimes we need this. Sometimes we don't?
-            //I dunno, just no IE11
-            //this.GL.translate(-0.5, -0.5);
-            this.fullviewGL.mozImageSmoothingEnabled = false;
-            this.fullviewGL.webkitImageSmoothingEnabled = false;
-            this.fullviewGL.msImageSmoothingEnabled = false;
-            this.fullviewGL.imageSmoothingEnabled = false;
-            this.GL.imageSmoothingEnabled = false;
 
             artimus.activeWorkspaces.push(this);
 
@@ -242,7 +233,7 @@ window.artimus = {
             }
 
             //Setup our grid then loop
-            this.setGridSize(8);
+            this.setGridSize(4);
             this.refreshGridPattern(() => {
                 loop();
             });
@@ -261,10 +252,16 @@ window.artimus = {
             imageData.data[12] = c1.r; imageData.data[13] = c1.g; imageData.data[14] = c1.b; imageData.data[15] = 255;
             
             createImageBitmap(imageData).then(bitmap => {
+                if (this.gridBitmap) this.gridBitmap.close();
                 this.gridBitmap = bitmap;
                 
+                //Create the pattern and position it
                 this.gridPattern = this.fullviewGL.createPattern(bitmap, "repeat");
                 this.gridPattern.setTransform(this.gridMatrix);
+
+                //Update grid canvas
+                this.gridGL.fillStyle = this.gridPattern;
+                this.gridGL.fillRect(0, 0, this.width, this.height);
 
                 if (then) then();
             });
@@ -283,8 +280,8 @@ window.artimus = {
         }
 
         renderLoop() {
-            this.fullviewGL.fillStyle = this.gridPattern;
-            this.fullviewGL.fillRect(0, 0, this.width, this.height);
+            this.fullviewGL.drawImage(this.gridCanvas, 0, 0);
+
             for (let layerID in this.layers) {
                 if (layerID == this.currentLayer) this.fullviewGL.drawImage(this.editingCanvas, 0, 0);
                 else {
@@ -824,13 +821,24 @@ window.artimus = {
             
             this.editingCanvas.width = width;
             this.editingCanvas.height = height;
+            
+            this.gridCanvas.width = width;
+            this.gridCanvas.height = height;
 
             //resize layers
-            if (this.GL) {
-                for (let index = 0; index < this.layers.length; index++) {
-                    this.resizeLayer(index, this.#width, this.#height, editingData);
-                }
+            for (let index = 0; index < this.layers.length; index++) {
+                this.resizeLayer(index, this.#width, this.#height, editingData);
             }
+
+            //Finally set smoothing
+            this.fullviewGL.imageSmoothingEnabled = false;
+            this.previewGL.imageSmoothingEnabled = false;
+            this.gridGL.imageSmoothingEnabled = false;
+            this.GL.imageSmoothingEnabled = false;
+
+            //Redraw the grid
+            this.gridGL.fillStyle = this.gridPattern;
+            this.gridGL.fillRect(0, 0, this.width, this.height);
         }
 
         undo() {
