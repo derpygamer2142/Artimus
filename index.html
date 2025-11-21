@@ -24,7 +24,7 @@
         <div class="top-bar">
             <cugi-dropdown>File
                 <cugi-option>{ type: "button", text: "New", onclick: () => {
-                    artimus.activeWorkspaces[0].new(64, 64);
+                    editor.fileResize(true);
                 }}</cugi-option>
                 <cugi-option>{ type: "button", text: "Save", onclick: () => {
                     artimus.activeWorkspaces[0].exportToPC();
@@ -43,7 +43,7 @@
             </cugi-dropdown>
             <cugi-dropdown>Sprite
                 <cugi-option>{ type: "button", text: "Resize", onclick: () => {
-                    artimus.activeWorkspaces[0].resize(64, 64);
+                    editor.fileResize(false);
                 }}</cugi-option>
                 <cugi-option>{ type: "button", text: "Undo (ctrl + z)", onclick: () => {
                     artimus.activeWorkspaces[0].undo();
@@ -57,7 +57,7 @@
         <div id="workspace-area" class="workspace"></div>
     </div>
     <div class="modal-background">
-        <div class="welcome-screen">
+        <div id="popup" class="welcome-screen">
             <h1>Artimus</h1>
             <p>A web based art editor and library created by ObviousStudios and open sourced under the MIT liscense</p>
             <p>Originally created for <a href="https://coffee-engine.github.io/">Coffee Engine</a></p>
@@ -65,12 +65,13 @@
             <p>Please note that this software and the library behind it is under development.</p>
             <p>Things may break or be unstable.</p>
             <p>If you are fine with this and want to try this web demo click the "I'm ready!" button below!</p>
-            <button class="artimus-button" onclick="workspace.new(640, 480); editor.closeModal();">I'm ready!</button>
+            <button class="artimus-button" onclick="editor.workspace.new(640, 480); editor.closeModal();">I'm ready!</button>
         </div>
     </div>
     <script>
-        const workspace = artimus.inject(document.getElementById("workspace-area"));
-        workspace.resize(0, 0);
+        editor.workspace = artimus.inject(document.getElementById("workspace-area"));
+        editor.popup = document.getElementById("popup");
+        editor.workspace.resize(0, 0);
         artimus.globalRefreshTools();
     </script>
 </body>

@@ -83,6 +83,30 @@ cugi-dropdown:active {
     font-family: monospace;
 }
 
+.welcome-screen .CUGI-PropertyHolder {
+    display: flex;
+}
+
 .welcome-screen > h1 {
     margin: 0px;
+}
+
+.CUGI-Button {
+    background-color: var(--artimus-button-normal);
+    color: var(--artimus-text);
+    transition: 300ms background-color;
+
+    border-width: 2px;
+    border-style: solid;
+    border-color: var(--artimus-button-hover);
+    border-radius: 16px;
+}
+
+.CUGI-Button:hover {
+    background-color: var(--artimus-button-hover);
+}
+
+.CUGI-Button:active {
+    background-color: var(--artimus-button-click);
+    transition: 0ms background-color;
 }
