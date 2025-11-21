@@ -110,3 +110,7 @@ cugi-dropdown:active {
     background-color: var(--artimus-button-click);
     transition: 0ms background-color;
 }
+
+.LOGO {
+    image-rendering: pixelated;
+}
