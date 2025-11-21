@@ -69,6 +69,21 @@ window.artimus = {
         return `#${hexR}${hexG}${hexB}`;
     },
 
+    tool: class {
+        get icon() { return ""; }
+
+        constructor(workspace) {
+            this.workspace = workspace;
+        }
+
+        mouseDown() {}
+        mouseUp() {}
+        preview() {}
+        CUGI() { return [] }
+
+        properties = {};
+    },
+
     workspace: class {
         //Scrolling
         #scrollX = 0;
@@ -95,7 +110,7 @@ window.artimus = {
         #tool = ""
         toolFunction = {};
         set tool(value) {
-            if (artimus.tools[value]) this.toolFunction = artimus.tools[value];
+            if (artimus.tools[value]) this.toolFunction = new artimus.tools[value]();
             else this.toolFunction = {};
 
             this.toolProperties = Object.assign({},this.toolFunction.properties, this.toolProperties);
@@ -490,7 +505,7 @@ window.artimus = {
             this.selectedElement = null;
 
             for (let toolID in artimus.tools) {
-                const tool = artimus.tools[toolID];
+                const tool = artimus.tools[toolID].prototype;
 
                 const button = document.createElement("button");
 

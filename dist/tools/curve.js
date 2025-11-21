@@ -1,20 +1,20 @@
-artimus.tools.curve = {
-    icon: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="117.67375" height="117.67375" viewBox="0,0,117.67375,117.67375"><g transform="translate(-181.16313,-121.16312)"><g fill="none" stroke-miterlimit="10"><path d="M181.16313,238.83687v-117.67375h117.67375v117.67375z" stroke="none" stroke-width="0" stroke-linecap="butt"/><path d="M195.20082,211.04658c0,0 2.79019,-34.67254 29.19166,-48.10458c34.49444,-17.54943 60.40671,-13.61048 60.40671,-13.61048" stroke="currentColor" stroke-width="9.5" stroke-linecap="round"/></g></g></svg><!--rotationCenter:58.83687282811721:58.836882828117226-->',
+artimus.tools.curve = class extends artimus.tools.line {
+    get icon() { return '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="117.67375" height="117.67375" viewBox="0,0,117.67375,117.67375"><g transform="translate(-181.16313,-121.16312)"><g fill="none" stroke-miterlimit="10"><path d="M181.16313,238.83687v-117.67375h117.67375v117.67375z" stroke="none" stroke-width="0" stroke-linecap="butt"/><path d="M195.20082,211.04658c0,0 2.79019,-34.67254 29.19166,-48.10458c34.49444,-17.54943 60.40671,-13.61048 60.40671,-13.61048" stroke="currentColor" stroke-width="9.5" stroke-linecap="round"/></g></g></svg><!--rotationCenter:58.83687282811721:58.836882828117226-->'; }
     
-    mouseDown: (gl, x, y, toolProperties) => {
+    mouseDown(gl, x, y, toolProperties) {
         if (toolProperties.state == 0) {
             toolProperties.start = [x, y];
             toolProperties.end = [x, y];
         }
-    },
+    }
 
-    mouseMove: (gl, x, y, toolProperties) => {
+    mouseMove(gl, x, y, toolProperties) {
         if (toolProperties.state == 0) {
             toolProperties.end = [x, y];
         }
-    },
+    }
 
-    drawLine: (gl, sx, sy, ex, ey, cx, cy, toolProperties) => {
+    drawLine(gl, sx, sy, ex, ey, cx, cy, toolProperties) {
         if (toolProperties.pixelBrush) {
             
             const strokeSize = toolProperties.strokeSize;
@@ -43,7 +43,7 @@ artimus.tools.curve = {
                 rx = Math.floor(rx);
                 ry = Math.floor(ry);
 
-                artimus.tools.line.drawLine(gl, lx, ly, rx, ry, toolProperties);
+                this.drawLine(gl, lx, ly, rx, ry, toolProperties);
                 lx = rx;
                 ly = ry;
             }
@@ -59,11 +59,11 @@ artimus.tools.curve = {
             gl.stroke();
             gl.closePath();
         }
-    },
+    }
 
-    mouseUp: (gl, x, y, toolProperties) => {
+    mouseUp(gl, x, y, toolProperties) {
         if (toolProperties.state == 1) {
-            artimus.tools.curve.drawLine(gl, ...toolProperties.start, ...toolProperties.end, x, y, toolProperties);
+            this.drawLine(gl, ...toolProperties.start, ...toolProperties.end, x, y, toolProperties);
             toolProperties.start = null;
             toolProperties.state = 0;
         }
@@ -71,28 +71,28 @@ artimus.tools.curve = {
             toolProperties.end = [x, y];
             toolProperties.state = 1;
         }
-    },
+    }
 
-    preview: (gl, x, y, toolProperties) => {
+    preview(gl, x, y, toolProperties) {
         if (toolProperties.start) {
-            if (toolProperties.state == 0) artimus.tools.curve.drawLine(gl, ...toolProperties.start, x, y, x, y, toolProperties);
-            else artimus.tools.curve.drawLine(gl, ...toolProperties.start, ...toolProperties.end, x, y, toolProperties);
+            if (toolProperties.state == 0) this.drawLine(gl, ...toolProperties.start, x, y, x, y, toolProperties);
+            else this.drawLine(gl, ...toolProperties.start, ...toolProperties.end, x, y, toolProperties);
         }
         else {
-            artimus.tools.curve.drawLine(gl, x, y, x + 0.1, y + 0.1, x, y, toolProperties);
+            this.drawLine(gl, x, y, x + 0.1, y + 0.1, x, y, toolProperties);
         }
-    },
+    }
 
-    CUGI:(artEditor) => { return [
+    CUGI(artEditor) { return [
         { target: artEditor.toolProperties, key: "strokeColor", type: "color" },
         { target: artEditor.toolProperties, key: "strokeSize", type: "int" },
         { target: artEditor.toolProperties, key: "pixelBrush", type: "boolean" },
-    ]},
+    ]}
 
-    properties: {
+    properties = {
         strokeColor: "#000000",
         strokeSize: 2,
         pixelBrush: false,
         state: 0,
-    }
+    };
 }
