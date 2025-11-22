@@ -47,7 +47,7 @@ body {
 .artimus-canvas {
     image-rendering: pixelated;
 
-    transform: translate(-50%, -50%) scale(var(--zoom)) translate(var(--scrollX), var(--scrollY));
+    transform: translate(-50%, -50%) scale(var(--zoom)) translate(var(--scrollX), var(--scrollY)) scale(var(--canvasWidth), var(--canvasHeight));
     position: relative;
     top: 50%;
     left: 50%;

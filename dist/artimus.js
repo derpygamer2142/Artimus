@@ -162,7 +162,9 @@ window.artimus = {
             this.quickVar(this.container, {
                 "scrollX": `${this.scrollX}px`,
                 "scrollY": `${this.scrollY}px`,
-                "zoom": this.zoom
+                "zoom": this.zoom,
+                "canvasWidth": this.width,
+                "canvasHeight": this.height
             });
         }
 
@@ -345,6 +347,10 @@ window.artimus = {
 
             this.canvasArea = document.createElement("div");
             this.canvas = document.createElement("canvas");
+            
+            //Fix for it resizing it's parents
+            this.canvas.style.width = "1px";
+            this.canvas.style.height = "1px";
             
             //Now we can style our children
             this.container.className = "artimus-container";
@@ -927,6 +933,8 @@ window.artimus = {
             //Redraw the grid
             this.gridGL.fillStyle = this.gridPattern;
             this.gridGL.fillRect(0, 0, this.width, this.height);
+
+            this.updatePosition();
         }
 
         undo() {
