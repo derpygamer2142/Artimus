@@ -63,9 +63,7 @@ artimus.tools.selectionCircle = class extends artimus.tool {
             gl.stroke();
             gl.setLineDash([]);
         }
-        else {
-            gl.fillStyle = getComputedStyle(document.body).getPropertyValue("--artimus-selection-outline");
-            gl.fillRect(x, y, 1, 1);
-        }
+        gl.fillStyle = getComputedStyle(document.body).getPropertyValue("--artimus-selection-outline");
+        gl.fillRect(x, y, 1, 1);
     }
 }
