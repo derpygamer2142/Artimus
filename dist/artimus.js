@@ -2,6 +2,9 @@ window.artimus = {
     tools: {},
     maxHistory: 10,
 
+    degreeToRad: (deg) => (deg * (3.1415962 / 180)),
+    radToDegree: (rad) => (rad * (180 / 3.1415962)),
+
     getCSSVariable: (variable) => {
         return getComputedStyle(document.body).getPropertyValue(`--artimus-${variable}`);
     },
@@ -112,6 +115,7 @@ window.artimus = {
         set tool(value) {
             if (artimus.tools[value]) this.toolFunction = new artimus.tools[value]();
             else this.toolFunction = {};
+            this.toolFunction.workspace = this;
 
             this.toolProperties = Object.assign({},this.toolFunction.properties, this.toolProperties);
 
@@ -148,6 +152,10 @@ window.artimus = {
         layerClass = "artimus-button artimus-sideBarButton artimus-layer ";
         toolClassSelected = "artimus-sideBarButton-selected artimus-tool-selected ";
         layerClassSelected = "artimus-sideBarButton-selected artimus-layer-selected ";
+
+        selection = [];
+        selectionAnimation = 0;
+        selectionPath = new Path2D();
 
         updatePosition() {
             //Setup some CSS
@@ -306,6 +314,17 @@ window.artimus = {
             }
 
             this.fullviewGL.drawImage(this.previewCanvas, 0, 0);
+
+            if (this.selection.length > 0) {
+                this.selectionAnimation = (this.selectionAnimation + 0.1) % 6;
+                this.fullviewGL.setLineDash([4, 2]);
+                this.fullviewGL.lineDashOffset = this.selectionAnimation;
+                this.fullviewGL.strokeStyle = getComputedStyle(document.body).getPropertyValue("--artimus-selection-outline");
+                this.fullviewGL.lineWidth = 1;
+                this.fullviewGL.translate(0.5, 0.5);
+                this.fullviewGL.stroke(this.selectionPath);
+                this.fullviewGL.translate(-0.5, -0.5);
+            }
         }
 
         createLayout() {
@@ -559,6 +578,60 @@ window.artimus = {
                 this.toolbox.appendChild(button);
                 button.appendChild(label);
             }
+        }
+
+        //For selections
+        setSelection(newSelection) {
+            if (this.selection.length == 0) this.GL.save();
+            else {
+                this.GL.restore();
+                this.GL.save();
+            }
+
+            //Reset animation
+            this.selectionAnimation = 0;
+
+            //Make sure it is a polygon
+            if (!Array.isArray(newSelection)) {
+                console.warn("Selection is not an array!", newSelection);
+                return this.clearSelection();
+            }
+            if (newSelection.length < 6) {
+                console.warn("Selection is not a polygon!", newSelection);
+                return this.clearSelection();
+            }
+
+            //Make sure we use pairs of 2
+            if (newSelection.length % 2 == 1) {
+                console.warn("Selection is not x y pairs!", newSelection);
+                return this.clearSelection();
+            }
+
+            this.selection = newSelection;
+            this.updateSelectionPath();
+        }
+
+        clearSelection() {
+            this.selection = [];
+            this.selectionAnimation = 0;
+            this.updateSelectionPath();
+        }
+
+        updateSelectionPath() {
+            this.selectionPath = new Path2D();
+
+            if (this.selection.length > 0) {
+                //Create selection path
+                for (let i = 0; i < this.selection.length; i+=2) {
+                    if (i == 0) this.selectionPath.moveTo(this.selection[i], this.selection[i + 1]);
+                    else this.selectionPath.lineTo(this.selection[i], this.selection[i + 1]);
+                }
+                //Finally end it
+                this.selectionPath.lineTo(this.selection[0], this.selection[1]);
+
+                this.GL.clip(this.selectionPath, "evenodd");
+            }
+            else this.GL.restore();
         }
 
         //Layer manipulation, for use inside of the library itself but exposed for people to use for their own purposes
