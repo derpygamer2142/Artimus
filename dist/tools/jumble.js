@@ -10,15 +10,25 @@ artimus.tools.jumble = class extends artimus.tool {
         const imageData = gl.getImageData(rx, ry, jumbleSize, jumbleSize);
         const data = imageData.data;
 
+        //Detection for selection, since we do this a lot it's good to have this.
+        const insideSelection = (this.workspace.hasSelection) ? 
+            (x, y) => this.inSelection(gl, x + rx, y + ry) :
+            () => false;
+
         //For my jumble, whole square
         if (jumbleWholeSquare) {
             const jumbled = [];
             //Randomize
-            for (let i = 0; i < data.length; i+=4) { if (Math.random() > 0.5) jumbled.push(i); else jumbled.splice(0, 0, i) }
+            for (let i = 0; i < data.length; i+=4) {
+                const sx = Math.floor(i / 4) % jumbleSize;
+                const sy = Math.floor((i / 4) / jumbleSize);
 
-            //console.log(jumbled, data);
+                if (Math.random() > 0.5) jumbled.push([i, sx, sy]); 
+                else jumbled.splice(0, 0, [i, sx, sy]); 
+            }
+
             for (let wy = 0; wy < jumbleSize; wy++) { for (let wx = 0; wx < jumbleSize; wx++) {
-                const i1 = jumbled.pop();
+                const [i1, sx, sy] = jumbled.pop();
                 const i2 = ((wy * jumbleSize) + wx) * 4;
 
                 const r1 = data[i1];
@@ -31,15 +41,19 @@ artimus.tools.jumble = class extends artimus.tool {
                 const b2 = data[i2 + 2];
                 const a2 = data[i2 + 3];
                 
-                imageData.data[i1]     += (r2 - r1) * mix;
-                imageData.data[i1 + 1] += (g2 - g1) * mix;
-                imageData.data[i1 + 2] += (b2 - b1) * mix;
-                imageData.data[i1 + 3] += (a2 - a1) * mix;
+                if (insideSelection(sx, sy)) {
+                    imageData.data[i1]     += (r2 - r1) * mix;
+                    imageData.data[i1 + 1] += (g2 - g1) * mix;
+                    imageData.data[i1 + 2] += (b2 - b1) * mix;
+                    imageData.data[i1 + 3] += (a2 - a1) * mix;
+                }
                 
-                imageData.data[i2]     += (r1 - r2) * mix;
-                imageData.data[i2 + 1] += (g1 - g2) * mix;
-                imageData.data[i2 + 2] += (b1 - b2) * mix;
-                imageData.data[i2 + 3] += (a1 - a2) * mix;
+                if (insideSelection(wx, wy)) {
+                    imageData.data[i2]     += (r1 - r2) * mix;
+                    imageData.data[i2 + 1] += (g1 - g2) * mix;
+                    imageData.data[i2 + 2] += (b1 - b2) * mix;
+                    imageData.data[i2 + 3] += (a1 - a2) * mix;
+                }
             }}
         }
         //For Chiragon's jumble, little bits.
@@ -66,15 +80,19 @@ artimus.tools.jumble = class extends artimus.tool {
                 const b2 = data[i2 + 2];
                 const a2 = data[i2 + 3];
 
-                imageData.data[i1]     += (r2 - r1) * mix;
-                imageData.data[i1 + 1] += (g2 - g1) * mix;
-                imageData.data[i1 + 2] += (b2 - b1) * mix;
-                imageData.data[i1 + 3] += (a2 - a1) * mix;
-
-                imageData.data[i2]     += (r1 - r2) * mix;
-                imageData.data[i2 + 1] += (g1 - g2) * mix;
-                imageData.data[i2 + 2] += (b1 - b2) * mix;
-                imageData.data[i2 + 3] += (a1 - a2) * mix;
+                if (insideSelection(x1, y1)) {
+                    imageData.data[i1]     += (r2 - r1) * mix;
+                    imageData.data[i1 + 1] += (g2 - g1) * mix;
+                    imageData.data[i1 + 2] += (b2 - b1) * mix;
+                    imageData.data[i1 + 3] += (a2 - a1) * mix;
+                }
+                
+                if (insideSelection(x2, y2)) {
+                    imageData.data[i2]     += (r1 - r2) * mix;
+                    imageData.data[i2 + 1] += (g1 - g2) * mix;
+                    imageData.data[i2 + 2] += (b1 - b2) * mix;
+                    imageData.data[i2 + 3] += (a1 - a2) * mix;
+                }
             }
         }
 

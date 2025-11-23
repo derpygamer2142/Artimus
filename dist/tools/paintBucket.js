@@ -42,6 +42,11 @@ artimus.tools.paintBucket = class extends artimus.tool {
             data[targetCoord + 3] = myColor.a;
         }
 
+        //Detection for selection, since we do this a lot it's good to have this.
+        const outsideSelection = (this.workspace.hasSelection > 0) ? 
+            (x, y) => !(this.inSelection(gl, x, y)) : 
+            () => false;
+
         //Queue related stuff to prevent backtracking
         let paintQueue = [[x, y]];
 
@@ -50,6 +55,12 @@ artimus.tools.paintBucket = class extends artimus.tool {
         //Go through the paint queue setting colours and getting next positions, finally ending when none are left
         while (paintQueue.length > 0) {
             let [ px, py ] = paintQueue[0];
+
+            if (outsideSelection(px, py)) {
+                paintQueue.splice(0, 1);
+                continue;
+            }
+
             targetCoord = this.coordToColourID(px, py, width);
             const isTransparent = data[targetCoord + 3] == 0 || data[targetCoord + 3] == 255;
 

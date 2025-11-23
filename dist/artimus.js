@@ -84,6 +84,11 @@ window.artimus = {
         preview() {}
         CUGI() { return [] }
 
+        inSelection(gl, x, y) {
+            if (this.workspace.hasSelection > 0) return gl.isPointInPath(this.workspace.selectionPath, x, y);
+            else return true;
+        }
+
         properties = {};
     },
 
@@ -156,6 +161,7 @@ window.artimus = {
         selection = [];
         selectionAnimation = 0;
         selectionPath = new Path2D();
+        hasSelection = false;
 
         updatePosition() {
             //Setup some CSS
@@ -627,6 +633,8 @@ window.artimus = {
             this.selectionPath = new Path2D();
 
             if (this.selection.length > 0) {
+                this.hasSelection = true;
+
                 //Create selection path
                 for (let i = 0; i < this.selection.length; i+=2) {
                     if (i == 0) this.selectionPath.moveTo(this.selection[i], this.selection[i + 1]);
@@ -637,7 +645,10 @@ window.artimus = {
 
                 this.GL.clip(this.selectionPath, "evenodd");
             }
-            else this.GL.restore();
+            else {
+                this.GL.restore();
+                this.hasSelection = false;
+            }
         }
 
         //Layer manipulation, for use inside of the library itself but exposed for people to use for their own purposes
