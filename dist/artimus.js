@@ -310,8 +310,9 @@ window.artimus = {
             }
         }
 
-        renderLoop() {
-            this.fullviewGL.drawImage(this.gridCanvas, 0, 0);
+        renderLoop(isExport) {
+            if (!isExport) this.fullviewGL.drawImage(this.gridCanvas, 0, 0);
+            else this.fullviewGL.clearRect(0, 0, this.width, this.height);
 
             for (let layerID in this.layers) {
                 if (layerID == this.currentLayer) this.fullviewGL.drawImage(this.editingCanvas, 0, 0);
@@ -324,7 +325,7 @@ window.artimus = {
             this.fullviewGL.drawImage(this.previewCanvas, 0, 0);
 
             //If we have a selection draw the outline
-            if (this.hasSelection) {
+            if (this.hasSelection && !isExport) {
                 this.selectionAnimation = (this.selectionAnimation + 0.1) % 6;
                 this.fullviewGL.setLineDash([4, 2]);
                 this.fullviewGL.lineDashOffset = this.selectionAnimation;
@@ -999,6 +1000,8 @@ window.artimus = {
         }
 
         export() {
+            //Before the frame gets render this already gets obliterated lol, so it's a no notice export
+            this.renderLoop(true);
             return this.canvas.toDataURL();
         }
 
