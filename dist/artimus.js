@@ -750,10 +750,17 @@ window.artimus = {
             label.onclick = () => this.setLayer(element.targetLayer);
             layerData.label = label;
 
-            const removeLayer = document.createElement("button");
-            removeLayer.className = "artimus-button artimus-layerButton";
-            removeLayer.innerText = "×";
-            removeLayer.onclick = () => this.removeLayer(element.targetLayer);
+            label.CUGI_CONTEXT = () => {
+                return [
+                    { type: "button", text: "delete", onclick: () => this.removeLayer(element.targetLayer) },
+                    { type: "button", text: "properties", onclick: () => this.removeLayer(element.targetLayer) }
+                ]
+            }
+
+            label.CUGI_PREPROCESS = (item) => {
+                item.text = artimus.translate(item.translationKey || item.key || item.text, "layerDropdown") || item.text || item.key;
+                return item;
+            }
 
             const upButton = document.createElement("button");
             upButton.className = "artimus-button artimus-layerButton";
@@ -769,7 +776,6 @@ window.artimus = {
                 this.moveLayer(element.targetLayer, -1);
             }
 
-            element.appendChild(removeLayer);
             element.appendChild(upButton);
             element.appendChild(downButton);
             element.appendChild(label);
