@@ -1099,7 +1099,7 @@ window.artimus = {
         export() {
             //Before the frame gets render this already gets obliterated lol, so it's a no notice export
             this.renderComposite();
-            return this.canvas.toDataURL();
+            return this.compositeCanvas.toDataURL();
         }
 
         exportToPC() {
