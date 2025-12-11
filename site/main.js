@@ -31,3 +31,37 @@ editor.fileResize = (newFile) => {
     document.body.style.setProperty("--modal-interaction", "all");
     document.body.style.setProperty("--modal-opacity", "100%");
 }
+
+artimus.layerPropertyMenu = (workspace, layer) => {
+
+    editor.popup.innerHTML = "";
+    editor.popup.appendChild(CUGI.createList([
+        { type: "header", text: layer },
+        { type: "dropdown", target: window, key: "blendMode", items: [
+            { text: "Default", value: "source-over"},
+            { text: "additive", value: "lighter"},
+            { text: "multiply", value: "multiply" },
+            { text: "subtractive", value: "difference" },
+
+            { text: "exclude", value: "exclusion" },
+
+            { text: "screen", value: "screen" },
+            { text: "overlay", value: "overlay" },
+
+            { text: "lighten", value: "lighten" },
+            { text: "darken", value: "darken" },
+
+            { text: "burn", value: "color-burn" },
+            { text: "dodge", value: "color-dodge" },
+
+            { text: "soft-light", value: "soft-light"},
+            { text: "hard-light", value: "hard-light"},
+        ], onchange: () => {
+            
+        } },
+        { type: "button", text: "ok", onclick: () => editor.closeModal() }
+    ]));
+
+    document.body.style.setProperty("--modal-interaction", "all");
+    document.body.style.setProperty("--modal-opacity", "100%");
+}
