@@ -124,17 +124,17 @@ window.artimus = {
             this.dataRaw = new ImageData(width, height);
             
             this.workspace = workspace;
-            this.name = name || `Layer ${this.workspace.layers.length + 1}`;
+            this.name = name || `${artimus.translate("layer#", "layer").replace("#", this.layers.length + 1)}`;
 
             //Do a thing, guarenteed to not exist (hopefully)
             if (this.workspace.layerExists(name)) {
                 let num = 1;
-                name = (`Layer ${num}`);
+                name = (`${artimus.translate("layer#", "layer").replace("#", num)}`);
                 
                 //Find one that doesn't exist.
                 while (this.workspace.layerExists(name)) {
                     num++;
-                    name = (`Layer ${num}`);
+                    name = (`${artimus.translate("layer#", "layer").replace("#", num)}`);
                 }
             }
 
@@ -839,7 +839,7 @@ window.artimus = {
         }
 
         createLayer(name) {
-            const layer = new artimus.layer(this.canvas.width, this.canvas.height, name || ("Layer " + (this.layers.length + 1)), this);
+            const layer = new artimus.layer(this.canvas.width, this.canvas.height, name || (`${artimus.translate("layer#", "layer").replace("#", this.layers.length + 1)}`), this);
             return layer;
         }
 

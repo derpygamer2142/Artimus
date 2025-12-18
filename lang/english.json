@@ -32,7 +32,7 @@
     "artimus.toolDropdown.useWithDefaults": "Use with defaults",
     "artimus.toolDropdown.use": "Use",
 
-    "artimus.layer.defaultName": "Layer #",
+    "artimus.layer.layer#": "Layer #",
     "artimus.layer.inputPlaceholder": "New Layer",
 
     "artimus.layerDropdown.delete": "Delete",
