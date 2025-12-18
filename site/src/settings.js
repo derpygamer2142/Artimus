@@ -1,4 +1,7 @@
-editor.settings = {};
+editor.settings = {
+    theme: "default",
+    maxHistory: 10
+};
 
 editor.saveSettings = () => localStorage.setItem("settings", JSON.stringify(editor.settings));
 
@@ -16,6 +19,10 @@ editor.settingDefs = {
 
             editor.saveSettings();
         }},
+        {type: "int", target: editor.settings, key: "maxHistory", min: 1, max: 50, onchange: (value) => {
+            artimus.maxHistory = value;
+            editor.saveSettings();
+        }}
     ]
 };
 
