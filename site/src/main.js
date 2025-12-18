@@ -65,7 +65,7 @@ artimus.layerPropertyMenu = (workspace, layer) => {
     document.body.style.setProperty("--modal-opacity", "100%");
 }
 
-artimus.translate = (item, context) => (editor.language[`${context}.${item}`] || `${context}.${item}`);
+artimus.translate = (item, context) => (editor.language[`artimus.${context}.${item}`] || `artimus.${context}.${item}`);
 
 fetch("lang/english.json").then(result => result.text()).then(text => {
     //Parse the language file.
