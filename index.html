@@ -37,6 +37,9 @@
                 <cugi-option>{ type: "button", text: "Save", onclick: () => {
                     artimus.activeWorkspaces[0].exportToPC();
                 }}</cugi-option>
+                <cugi-option>{ type: "button", text: "Export as PNG", onclick: () => {
+                    artimus.activeWorkspaces[0].exportToPC("png");
+                }}</cugi-option>
                 <cugi-option>{ type: "button", text: "Load", onclick: () => {
                     const fileInput = document.createElement("input");
                     fileInput.type = "file";

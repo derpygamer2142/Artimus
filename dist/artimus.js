@@ -79,6 +79,46 @@ window.artimus = {
     //Should probably make a default one but for now this works.
     layerPropertyMenu: (workspace, layer) => {},
 
+    //Other stuff
+    extensionToMIME: {
+        "png": "image/png",
+        "jpeg": "image/jpeg",
+        "jpg": "image/jpeg",
+
+        //Eww
+        "webp": "image/webp",
+    },
+
+    //Mostly used in saving but can be used for other purposes, like making a list of global composite operations
+    blendModes: [
+        "source-over",
+        "source-in",
+        "source-out",
+        "source-atop",
+        "destination-over",
+        "destination-in",
+        "destination-out",
+        "destination-atop",
+        "lighter",
+        "copy",
+        "xor",
+        "multiply",
+        "screen",
+        "overlay",
+        "darken",
+        "lighten",
+        "color-dodge",
+        "color-burn",
+        "hard-light",
+        "soft-light",
+        "difference",
+        "exclusion",
+        "hue",
+        "saturation",
+        "color",
+        "luminosity",
+    ],
+
     tool: class {
         get icon() { return ""; }
 
@@ -273,36 +313,6 @@ window.artimus = {
         tEncoder = new TextEncoder();
         tDecoder = new TextDecoder();
         magic = Array.from("COFE", char => String(char).charCodeAt(0));
-
-        //Mostly used in saving but can be used for other purposes, like making a list of global composite operations
-        blendModes = [
-            "source-over",
-            "source-in",
-            "source-out",
-            "source-atop",
-            "destination-over",
-            "destination-in",
-            "destination-out",
-            "destination-atop",
-            "lighter",
-            "copy",
-            "xor",
-            "multiply",
-            "screen",
-            "overlay",
-            "darken",
-            "lighten",
-            "color-dodge",
-            "color-burn",
-            "hard-light",
-            "soft-light",
-            "difference",
-            "exclusion",
-            "hue",
-            "saturation",
-            "color",
-            "luminosity",
-        ]
 
         updatePosition() {
             //Setup some CSS
@@ -1156,7 +1166,7 @@ window.artimus = {
                     for (let layer = 0; layer < layerCount; layer++) {
                         //Decode name and blend mode
                         const nameLength = (data[idx + 1] << 16) + (data[idx + 2] << 8) + (data[idx + 3]);
-                        const blendMode = this.blendModes[data[idx + 4]];
+                        const blendMode = artimus.blendModes[data[idx + 4]];
                         idx += 4;
 
                         //Extract name bytes and decode
@@ -1285,7 +1295,7 @@ window.artimus = {
                         (encodedName.length & 0x00ff00) >> 8,
                         (encodedName.length & 0x0000ff),
 
-                        this.blendModes.indexOf(blendMode) || 0,
+                        artimus.blendModes.indexOf(blendMode) || 0,
                         ...encodedName,
                     );
 
@@ -1357,7 +1367,7 @@ window.artimus = {
                             return this.exportArtimus().then(item => resolve(item));
                         
                         default:
-                            return resolve(this.compositeCanvas.toDataURL(this.extensionIDtoMIME[format] || this.extensionIDtoMIME.png));
+                            return resolve(this.compositeCanvas.toDataURL(artimus.extensionToMIME[format] || artimus.extensionToMIME.png));
                     }
                 });
             });
