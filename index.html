@@ -43,7 +43,7 @@
                 <cugi-option>{ type: "button", text: "Load", onclick: () => {
                     const fileInput = document.createElement("input");
                     fileInput.type = "file";
-                    fileInput.accept = "image/*";
+                    fileInput.accept = "image/*, .artimus";
 
                     fileInput.onchange = () => {
                         artimus.activeWorkspaces[0].importFromPC(fileInput.files[0]);
