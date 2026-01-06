@@ -1157,7 +1157,7 @@ window.artimus = {
                 (data[8] << 16) + (data[9] << 8) + (data[10]),
                 () => {
                     //Count bytes needed
-                    const bytesPerLayer = this.width * this.height;
+                    const bytesPerLayer = this.width * this.height * 4;
                     const layerCount = (data[11] << 8) + data[12];
                     let idx = 12;
 
@@ -1179,9 +1179,10 @@ window.artimus = {
                         name = this.tDecoder.decode(new Uint8Array(name));
 
                         //Parse the image now
-                        let imageData = [];
+                        let imageData = new Uint8ClampedArray(bytesPerLayer);
+                        let filled = 0;
 
-                        while (imageData.length < bytesPerLayer) {
+                        while (filled < bytesPerLayer) {
                             const stripSize = (data[idx + 1] << 8) + (data[idx + 2]);
                             const stripColor = [
                                 data[idx + 3],
@@ -1192,7 +1193,8 @@ window.artimus = {
 
                             let extended = Array(stripSize);
                             extended.fill(stripColor);
-                            imageData = imageData.concat(extended);
+                            imageData.set(extended.flat(2), filled);
+                            filled += stripSize * 4;
 
                             idx += 6;
                         }
@@ -1200,7 +1202,7 @@ window.artimus = {
                         this.createLayer(name, true);
 
                         //Set layer data
-                        this.layers[layer + 1].dataRaw = new ImageData(new Uint8ClampedArray(imageData.flat(4)), this.width, this.height);
+                        this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
                         this.layers[layer + 1].blendMode = blendMode;
 
                         this.updateLayer(layer + 1);
