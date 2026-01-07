@@ -1141,201 +1141,21 @@ window.artimus = {
             this.layerHistory = [];
         }
         
-        //Artimus File Import
-        layerReaders = [
-            1, //Numbers redirect so 0 would redirect to 1
-            (data, layer, bytesPerLayer, index) => {
-                //Decode name and blend mode
-                const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
-                const blendMode = artimus.blendModes[data[index + 4]];
-                index += 4;
-
-                //Extract name bytes and decode
-                let name = [];
-                for (let i = 0; i < nameLength; i++) {
-                    name.push(data[index + i + 1]);
-                }
-
-                index += name.length;
-                name = this.tDecoder.decode(new Uint8Array(name));
-
-                //Parse the image now
-                let imageData = new Uint8ClampedArray(bytesPerLayer);
-                let filled = 0;
-
-                while (filled < bytesPerLayer) {
-                    const stripSize = (data[index + 1] << 8) + (data[index + 2]);
-                    const stripColor = [
-                        data[index + 3],
-                        data[index + 4],
-                        data[index + 5],
-                        data[index + 6]
-                    ];
-
-                    let extended = Array(stripSize);
-                    extended.fill(stripColor);
-                    imageData.set(extended.flat(2), filled);
-                    filled += stripSize * 4;
-
-                    index += 6;
-                }
-
-                this.createLayer(name, true);
-
-                //Set layer data
-                this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
-                this.layers[layer + 1].blendMode = blendMode;
-
-                this.updateLayer(layer + 1);
-
-                return index;
-            },
-            //Format v2
-            (data, layer, bytesPerLayer, index) => {
-                //Decode name and blend mode
-                const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
-                const encodingMode = artimus.blendModes[data[index + 4]];
-                const blendMode = artimus.blendModes[data[index + 5]];
-                index += 5;
-
-                //Extract name bytes and decode
-                let name = [];
-                for (let i = 0; i < nameLength; i++) {
-                    name.push(data[index + i + 1]);
-                }
-
-                index += name.length;
-                name = this.tDecoder.decode(new Uint8Array(name));
-
-                //Parse the image now
-                let imageData = new Uint8ClampedArray(bytesPerLayer);
-                let filled = 0;
-
-                while (filled < bytesPerLayer) {
-                    const stripSize = (data[index + 1] << 8) + (data[index + 2]);
-                    const stripColor = [
-                        data[index + 3],
-                        data[index + 4],
-                        data[index + 5],
-                        data[index + 6]
-                    ];
-
-                    let extended = Array(stripSize);
-                    extended.fill(stripColor);
-                    imageData.set(extended.flat(2), filled);
-                    filled += stripSize * 4;
-
-                    index += 6;
-                }
-
-                this.createLayer(name, true);
-
-                //Set layer data
-                this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
-                this.layers[layer + 1].blendMode = blendMode;
-
-                this.updateLayer(layer + 1);
-
-                return index;
-            },
-        ];
-        
-        importArtimus(input) {
-            const data = new Uint8Array(input);
-
-            //Make sure it is an artimus image
-            if (
-                data[0] == this.magic[0] &&
-                data[1] == this.magic[1] &&
-                data[2] == this.magic[2] &&
-                data[3] == this.magic[3]
-            ) {
-                this.new(
-                (data[5] << 16) + (data[6] << 8) + (data[7]),
-                (data[8] << 16) + (data[9] << 8) + (data[10]),
-                () => {
-                    //Count bytes needed
-                    const bytesPerLayer = this.width * this.height * 4;
-                    const layerCount = (data[11] << 8) + data[12];
-                    const format = (data[4]);
-
-                    console.log(`Artimus format is ${format}!`);
-
-                    let idx = 12;
-
-                    //layer 1 is set to NaN as to not confuse it with an actual layer
-                    this.layers[0].name = NaN;
-                    
-                    //Loop through layers, and read them with whatever format of reader is needed;
-                    let layerReader = this.layerReaders[format];
-                    if (typeof layerReader == "number") this.layerReaders[layerReader];
-                    if (typeof layerReader != "function") {
-                        console.log(`Invalid layer reader ${layerReader} with origin of ${this.layerReaders[format]} on format ${format}`);
-                        return;
-                    }
-
-                    for (let layer = 0; layer < layerCount; layer++) {
-                        idx = layerReader(data, layer, bytesPerLayer, idx);
-                    }
-
-                    this.setLayer(1).then(() => {
-                        this.removeLayer(0)
-                        this.setLayer(0);
-                    });
-                });
-            }
-            else console.error("Artimus File invalid!");
-        }
-
-        importTypes = {
-            "artimus": "readAsArrayBuffer"
-        };
-
-        importFromPC(image) {
-            let extension = image.name.split(".");
-            extension = extension[extension.length - 1];
-            
-            this.fileReader.onload = () => { this.onImageLoad(this.fileReader.result, extension); };
-            this.fileReader[this.importTypes[extension] || "readAsDataURL"](image);
-        }
-
-        onImageLoad(data, extension) {
-            switch (extension) {
-                case "art":
-                case "artimus":
-                    this.importArtimus(data);
-                    break;
-            
-                default:
-                    const image = new Image();
-                    image.onload = () => {
-                        this.new(image.width, image.height, () => {
-                            this.setLayer(0, () => {
-                                this.GL.drawImage(image, 0, 0);
-                            });
-                        });
-                    }
-
-                    image.src = data;
-                    break;
-            }
-        }
-
-        //Artimus exporting
+        //Artimus Files
+        //==-- MODES --==//
+        //0 : Standard : All colours 6 bytes per strip
+        //      COUNT : 2 bytes
+        //      COLOR : 4 bytes
+        //1 : 256 palette : 256 colours max, 3 bytes per strip, beginning header with 1 + n bytes
+        //      -- Header
+        //      COLORS : 1 byte
+        //      PALETTE : N * 4 bytes
+        //      -- Contents
+        //      COUNT : 2 bytes
+        //      COLOR : 1 byte
+        //2 : Single Color : 1 colour max, yknow this one is self explanitory...
+        //     COLOR : 4 bytes
         encodingModes = [
-            //==-- MODES --==//
-            //0 : Standard : All colours 6 bytes per strip
-            //      COUNT : 2 bytes
-            //      COLOR : 4 bytes
-            //1 : 256 palette : 256 colours max, 3 bytes per strip, beginning header with 1 + n bytes
-            //      -- Header
-            //      COLORS : 1 byte
-            //      PALETTE : N * 4 bytes
-            //      -- Contents
-            //      COUNT : 2 bytes
-            //      COLOR : 1 byte
-            //2 : Single Color : 1 colour max, yknow this one is self explanitory...
-            //     COLOR : 4 bytes
             (data, bytesPerLayer, palette, colours) => {
                 let colour = [-1, -1, -1, -1];
                 let count = 0;
@@ -1443,6 +1263,198 @@ window.artimus = {
             },
         ]
 
+        //These align with encoding modes
+        decodingModes = [
+            (data, imageData, index, bytesPerLayer) => {
+                let filled = 0;
+
+                while (filled < bytesPerLayer) {
+                    const stripSize = (data[index + 1] << 8) + (data[index + 2]);
+                    const stripColor = [
+                        data[index + 3],
+                        data[index + 4],
+                        data[index + 5],
+                        data[index + 6]
+                    ];
+
+                    let extended = Array(stripSize);
+                    extended.fill(stripColor);
+                    imageData.set(extended.flat(2), filled);
+                    filled += stripSize * 4;
+
+                    index += 6;
+                }
+
+                return index;
+            },
+            
+            //TODO parse colour palette
+            (data, imageData, index, bytesPerLayer) => {
+                let filled = 0;
+
+                while (filled < bytesPerLayer) {
+                    const stripSize = (data[index + 1] << 8) + (data[index + 2]);
+                    const stripColor = [
+                        data[index + 3],
+                        data[index + 4],
+                        data[index + 5],
+                        data[index + 6]
+                    ];
+
+                    let extended = Array(stripSize);
+                    extended.fill(stripColor);
+                    imageData.set(extended.flat(2), filled);
+                    filled += stripSize * 4;
+
+                    index += 6;
+                }
+
+                return index;
+            },
+
+            (data, imageData, index, bytesPerLayer) => {
+                const colour = [data[index + 1], data[index + 2], data[index + 3], data[index + 4]]
+
+                let extended = Array(bytesPerLayer / 4);
+                extended.fill(colour);
+                imageData.set(extended.flat(2), 0);
+
+                return index + 4;
+            }
+        ]
+
+        //These align with the artimus format
+        layerReaders = [
+            1, //Numbers redirect so 0 would redirect to 1
+            (data, layer, bytesPerLayer, index) => {
+                //Decode name and blend mode
+                const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
+                const blendMode = artimus.blendModes[data[index + 4]];
+                index += 4;
+
+                //Extract name bytes and decode
+                let name = [];
+                for (let i = 0; i < nameLength; i++) {
+                    name.push(data[index + i + 1]);
+                }
+
+                index += name.length;
+                name = this.tDecoder.decode(new Uint8Array(name));
+
+                //Parse the image now
+                let imageData = new Uint8ClampedArray(bytesPerLayer);
+                let filled = 0;
+
+                while (filled < bytesPerLayer) {
+                    const stripSize = (data[index + 1] << 8) + (data[index + 2]);
+                    const stripColor = [
+                        data[index + 3],
+                        data[index + 4],
+                        data[index + 5],
+                        data[index + 6]
+                    ];
+
+                    let extended = Array(stripSize);
+                    extended.fill(stripColor);
+                    imageData.set(extended.flat(2), filled);
+                    filled += stripSize * 4;
+
+                    index += 6;
+                }
+
+                this.createLayer(name, true);
+
+                //Set layer data
+                this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
+                this.layers[layer + 1].blendMode = blendMode;
+
+                this.updateLayer(layer + 1);
+
+                return index;
+            },
+            //Format v2
+            (data, layer, bytesPerLayer, index) => {
+                //Decode name and blend mode
+                const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
+                const encodingMode = data[index + 4];
+                const blendMode = artimus.blendModes[data[index + 5]];
+                index += 5;
+
+                //Extract name bytes and decode
+                let name = [];
+                for (let i = 0; i < nameLength; i++) {
+                    name.push(data[index + i + 1]);
+                }
+
+                index += name.length;
+                name = this.tDecoder.decode(new Uint8Array(name));
+
+                //Parse the image now
+                let imageData = new Uint8ClampedArray(bytesPerLayer);
+                
+                console.log(encodingMode);
+                index = this.decodingModes[encodingMode](data, imageData, index, bytesPerLayer);
+
+                this.createLayer(name, true);
+
+                //Set layer data
+                this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
+                this.layers[layer + 1].blendMode = blendMode;
+
+                this.updateLayer(layer + 1);
+
+                return index;
+            },
+        ];
+        
+        importArtimus(input) {
+            const data = new Uint8Array(input);
+
+            //Make sure it is an artimus image
+            if (
+                data[0] == this.magic[0] &&
+                data[1] == this.magic[1] &&
+                data[2] == this.magic[2] &&
+                data[3] == this.magic[3]
+            ) {
+                this.new(
+                (data[5] << 16) + (data[6] << 8) + (data[7]),
+                (data[8] << 16) + (data[9] << 8) + (data[10]),
+                () => {
+                    //Count bytes needed
+                    const bytesPerLayer = this.width * this.height * 4;
+                    const layerCount = (data[11] << 8) + data[12];
+                    const format = (data[4]);
+
+                    console.log(`Artimus format is ${format}!`);
+
+                    let idx = 12;
+
+                    //layer 1 is set to NaN as to not confuse it with an actual layer
+                    this.layers[0].name = NaN;
+                    
+                    //Loop through layers, and read them with whatever format of reader is needed;
+                    let layerReader = this.layerReaders[format];
+                    if (typeof layerReader == "number") this.layerReaders[layerReader];
+                    if (typeof layerReader != "function") {
+                        console.log(`Invalid layer reader ${layerReader} with origin of ${this.layerReaders[format]} on format ${format}`);
+                        return;
+                    }
+
+                    for (let layer = 0; layer < layerCount; layer++) {
+                        idx = layerReader(data, layer, bytesPerLayer, idx);
+                    }
+
+                    this.setLayer(1).then(() => {
+                        this.removeLayer(0)
+                        this.setLayer(0);
+                    });
+                });
+            }
+            else console.error("Artimus File invalid!");
+        }
+
+
         exportArtimus() {
             return new Promise((resolve, reject) => {
                 //Just a simple measure of how many bytes we will need to take up
@@ -1535,7 +1547,41 @@ window.artimus = {
             });
         }
 
-        //Export
+        //Image import export
+        importTypes = {
+            "artimus": "readAsArrayBuffer"
+        };
+
+        importFromPC(image) {
+            let extension = image.name.split(".");
+            extension = extension[extension.length - 1];
+            
+            this.fileReader.onload = () => { this.onImageLoad(this.fileReader.result, extension); };
+            this.fileReader[this.importTypes[extension] || "readAsDataURL"](image);
+        }
+
+        onImageLoad(data, extension) {
+            switch (extension) {
+                case "art":
+                case "artimus":
+                    this.importArtimus(data);
+                    break;
+            
+                default:
+                    const image = new Image();
+                    image.onload = () => {
+                        this.new(image.width, image.height, () => {
+                            this.setLayer(0, () => {
+                                this.GL.drawImage(image, 0, 0);
+                            });
+                        });
+                    }
+
+                    image.src = data;
+                    break;
+            }
+        }
+
         export(format) {
             return new Promise((resolve, reject) => {
                 format = format || "artimus";
