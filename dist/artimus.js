@@ -1141,7 +1141,105 @@ window.artimus = {
             this.layerHistory = [];
         }
         
-        //Import
+        //Artimus File Import
+        layerReaders = [
+            1, //Numbers redirect so 0 would redirect to 1
+            (data, layer, bytesPerLayer, index) => {
+                //Decode name and blend mode
+                const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
+                const blendMode = artimus.blendModes[data[index + 4]];
+                index += 4;
+
+                //Extract name bytes and decode
+                let name = [];
+                for (let i = 0; i < nameLength; i++) {
+                    name.push(data[index + i + 1]);
+                }
+
+                index += name.length;
+                name = this.tDecoder.decode(new Uint8Array(name));
+
+                //Parse the image now
+                let imageData = new Uint8ClampedArray(bytesPerLayer);
+                let filled = 0;
+
+                while (filled < bytesPerLayer) {
+                    const stripSize = (data[index + 1] << 8) + (data[index + 2]);
+                    const stripColor = [
+                        data[index + 3],
+                        data[index + 4],
+                        data[index + 5],
+                        data[index + 6]
+                    ];
+
+                    let extended = Array(stripSize);
+                    extended.fill(stripColor);
+                    imageData.set(extended.flat(2), filled);
+                    filled += stripSize * 4;
+
+                    index += 6;
+                }
+
+                this.createLayer(name, true);
+
+                //Set layer data
+                this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
+                this.layers[layer + 1].blendMode = blendMode;
+
+                this.updateLayer(layer + 1);
+
+                return index;
+            },
+            //Format v2
+            (data, layer, bytesPerLayer, index) => {
+                //Decode name and blend mode
+                const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
+                const encodingMode = artimus.blendModes[data[index + 4]];
+                const blendMode = artimus.blendModes[data[index + 5]];
+                index += 5;
+
+                //Extract name bytes and decode
+                let name = [];
+                for (let i = 0; i < nameLength; i++) {
+                    name.push(data[index + i + 1]);
+                }
+
+                index += name.length;
+                name = this.tDecoder.decode(new Uint8Array(name));
+
+                //Parse the image now
+                let imageData = new Uint8ClampedArray(bytesPerLayer);
+                let filled = 0;
+
+                while (filled < bytesPerLayer) {
+                    const stripSize = (data[index + 1] << 8) + (data[index + 2]);
+                    const stripColor = [
+                        data[index + 3],
+                        data[index + 4],
+                        data[index + 5],
+                        data[index + 6]
+                    ];
+
+                    let extended = Array(stripSize);
+                    extended.fill(stripColor);
+                    imageData.set(extended.flat(2), filled);
+                    filled += stripSize * 4;
+
+                    index += 6;
+                }
+
+                this.createLayer(name, true);
+
+                //Set layer data
+                this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
+                this.layers[layer + 1].blendMode = blendMode;
+
+                this.updateLayer(layer + 1);
+
+                return index;
+            },
+        ];
+        
         importArtimus(input) {
             const data = new Uint8Array(input);
 
@@ -1159,53 +1257,25 @@ window.artimus = {
                     //Count bytes needed
                     const bytesPerLayer = this.width * this.height * 4;
                     const layerCount = (data[11] << 8) + data[12];
+                    const format = (data[4]);
+
+                    console.log(`Artimus format is ${format}!`);
+
                     let idx = 12;
 
-                    //Loop through layers
+                    //layer 1 is set to NaN as to not confuse it with an actual layer
                     this.layers[0].name = NaN;
+                    
+                    //Loop through layers, and read them with whatever format of reader is needed;
+                    let layerReader = this.layerReaders[format];
+                    if (typeof layerReader == "number") this.layerReaders[layerReader];
+                    if (typeof layerReader != "function") {
+                        console.log(`Invalid layer reader ${layerReader} with origin of ${this.layerReaders[format]} on format ${format}`);
+                        return;
+                    }
+
                     for (let layer = 0; layer < layerCount; layer++) {
-                        //Decode name and blend mode
-                        const nameLength = (data[idx + 1] << 16) + (data[idx + 2] << 8) + (data[idx + 3]);
-                        const blendMode = artimus.blendModes[data[idx + 4]];
-                        idx += 4;
-
-                        //Extract name bytes and decode
-                        let name = [];
-                        for (let i = 0; i < nameLength; i++) {
-                            name.push(data[idx + i + 1]);
-                        }
-
-                        idx += name.length;
-                        name = this.tDecoder.decode(new Uint8Array(name));
-
-                        //Parse the image now
-                        let imageData = new Uint8ClampedArray(bytesPerLayer);
-                        let filled = 0;
-
-                        while (filled < bytesPerLayer) {
-                            const stripSize = (data[idx + 1] << 8) + (data[idx + 2]);
-                            const stripColor = [
-                                data[idx + 3],
-                                data[idx + 4],
-                                data[idx + 5],
-                                data[idx + 6]
-                            ];
-
-                            let extended = Array(stripSize);
-                            extended.fill(stripColor);
-                            imageData.set(extended.flat(2), filled);
-                            filled += stripSize * 4;
-
-                            idx += 6;
-                        }
-
-                        this.createLayer(name, true);
-
-                        //Set layer data
-                        this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
-                        this.layers[layer + 1].blendMode = blendMode;
-
-                        this.updateLayer(layer + 1);
+                        idx = layerReader(data, layer, bytesPerLayer, idx);
                     }
 
                     this.setLayer(1).then(() => {
@@ -1251,7 +1321,122 @@ window.artimus = {
             }
         }
 
-        //Artimus data
+        //Artimus exporting
+        encodingModes = [
+            //==-- MODES --==//
+            //0 : Standard : All colours 6 bytes per strip
+            //      COUNT : 2 bytes
+            //      COLOR : 4 bytes
+            //1 : 256 palette : 256 colours max, 3 bytes per strip, beginning header with 1 + n bytes
+            //      -- Header
+            //      COLORS : 1 byte
+            //      PALETTE : N * 4 bytes
+            //      -- Contents
+            //      COUNT : 2 bytes
+            //      COLOR : 1 byte
+            //2 : Single Color : 1 colour max, yknow this one is self explanitory...
+            //     COLOR : 4 bytes
+            (data, bytesPerLayer, palette, colours) => {
+                let colour = [-1, -1, -1, -1];
+                let count = 0;
+                let savedBytes = 0;
+
+                for (let i = 0; i < bytesPerLayer; i+=4) {
+                    //Count colours
+                    if ((
+                        colour[0] == colours[i] &&
+                        colour[1] == colours[i + 1] &&
+                        colour[2] == colours[i + 2] &&
+                        colour[3] == colours[i + 3]) &&
+                        (count + 1) < Math.pow(2, 16)
+                    ) count++;
+                    else {
+                        //If the colour is not the same, or we are almost out of space we can begin anew
+                        if (count > 0) {
+                            data.push(
+                                (count & 0xff00) >> 8,
+                                (count & 0x00ff),
+
+                                ...colour
+                            )
+                        }
+                        
+                        savedBytes += 6;
+
+                        //The begin anew part
+                        colour = [colours[i], colours[i + 1], colours[i + 2], colours[i + 3]];
+                        count = 1;
+                    }
+                }
+
+                //Push the data once we hit the edge
+                data.push(
+                    (count & 0xff00) >> 8,
+                    (count & 0x00ff),
+
+                    ...colour
+                )
+
+                savedBytes += 6;
+                return savedBytes;
+            },
+            
+            //256 color
+            (data, bytesPerLayer, palette, colours) => {
+                let colour = [-1, -1, -1, -1];
+                let count = 0;
+                let savedBytes = 0;
+
+                //Start from 0 to get full range
+                data.push(palette.length - 1);
+                data.push(palette.flat(1));
+
+                for (let i = 0; i < bytesPerLayer; i+=4) {
+                    //Count colours
+                    if ((
+                        colour[0] == colours[i] &&
+                        colour[1] == colours[i + 1] &&
+                        colour[2] == colours[i + 2] &&
+                        colour[3] == colours[i + 3]) &&
+                        (count + 1) < Math.pow(2, 16)
+                    ) count++;
+                    else {
+                        //If the colour is not the same, or we are almost out of space we can begin anew
+                        if (count > 0) {
+                            data.push(
+                                (count & 0xff00) >> 8,
+                                (count & 0x00ff),
+
+                                palette.findIndex((val) => (
+                                    val[0] == colour[0] && 
+                                    val[1] == colour[1] &&
+                                    val[2] == colour[2] &&
+                                    val[3] == colour[3]
+                                ))
+                            )
+                        }
+                        
+                        savedBytes += 6;
+
+                        //The begin anew part
+                        colour = [colours[i], colours[i + 1], colours[i + 2], colours[i + 3]];
+                        count = 1;
+                    }
+                }
+
+                //Push the data once we hit the edge
+                data.push(
+                    (count & 0xff00) >> 8,
+                    (count & 0x00ff),
+
+                    ...colour
+                )
+
+                savedBytes += 6;
+                return savedBytes;
+            }
+        ]
+
         exportArtimus() {
             return new Promise((resolve, reject) => {
                 //Just a simple measure of how many bytes we will need to take up
@@ -1264,9 +1449,9 @@ window.artimus = {
                 //Width  : 3 bytes
                 //Height : 3 bytes
                 //Layers : 2 bytes
-                let data = [
+                let data = new Array(
                     ...this.magic,
-                    1,
+                    2,
                     
                     //Conver both width and height into their 3 byte components
                     (this.width & 0xff0000) >> 16,
@@ -1280,74 +1465,65 @@ window.artimus = {
                     //And the layer count
                     (layerCount & 0xff00) >> 8,
                     (layerCount & 0x00ff),
-                ];
+                );
 
                 //==-- LAYER FORMAT --==//
                 //Name Length : 3 bytes : Nobody should be more than 16777216 bytes... Right?
                 //Blend Mode  : 1 byte
+                //Encoding Mode : 1 byte
                 //Name String : N bytes
                 //Data        : A bytes
                 for (let layerID in this.layers) {
                     const {name, blendMode, dataRaw} = this.layers[layerID];
                     const encodedName = this.tEncoder.encode(name);
+
+                    //Determine a good encoding mode. See VV for a list
+                                                  //==-- MODES --==//
+                    let encodingMode = 0;
+                    let layerColours = Array.from(dataRaw.data).map(
+                        (val, idx, arr) => (idx % 4 == 0) ? (//We need big ints since JS caps bitwise to 16 bits for some reason?
+                                (BigInt(arr[idx + 3]) << 24n) + 
+                                (BigInt(arr[idx + 2]) << 16n) + 
+                                (BigInt(arr[idx + 1]) << 8n) + 
+                                BigInt(arr[idx])) 
+                        : null).filter(val => (val != null));
+
+                    //Appearently according to DDG I've gone and searched for something similar on stack overflow. thanks DDG
+                    layerColours = [... new Set(layerColours)].map((val) => [
+                        Number(val & 0x000000ffn),
+                        Number((val & 0x0000ff00n) >> 8n),
+                        Number((val & 0x00ff0000n) >> 16n),
+                        Number((val & 0xff000000n) >> 24n)
+                    ]);
+
+                    //FinD the mode finally
+                    if (layerColours.length == 1) encodingMode = 2
+                    else if (layerColours.length <= 256) encodingMode = 1;
                     
+                    //Temporarily set encoding mode to 0 until I can provide decoding
+                    encodingMode = 0;
+
                     //Add layer header
                     data.push(
                         (encodedName.length & 0xff0000) >> 16,
                         (encodedName.length & 0x00ff00) >> 8,
                         (encodedName.length & 0x0000ff),
+                        (encodingMode & 0xff),
 
                         artimus.blendModes.indexOf(blendMode) || 0,
                         ...encodedName,
                     );
 
                     //Now parse the layer data
-                    const colours = dataRaw.data;
-                    let colour = [-1, -1, -1, -1];
-                    let count = 0;
-
                     console.log(`Reading ${bytesPerLayer} bytes, for ${name}`);
 
-                    //==-- DATA FORMAT --==//
-                    //COUNT : 2 bytes
-                    //COLOR : 4 bytes
-                    for (let i = 0; i < bytesPerLayer; i+=4) {
-                        //Count colours
-                        if ((
-                            colour[0] == colours[i] &&
-                            colour[1] == colours[i + 1] &&
-                            colour[2] == colours[i + 2] &&
-                            colour[3] == colours[i + 3]) &&
-                            (count + 1) < Math.pow(2, 16)
-                        ) count++;
-                        else {
-                            //If the colour is not the same, or we are almost out of space we can begin anew
-                            if (count > 0) {
-                                data.push(
-                                    (count & 0xff00) >> 8,
-                                    (count & 0x00ff),
+                    const savedBytes = this.encodingModes[encodingMode](data, bytesPerLayer, layerColours, dataRaw.data) || "unknown";
 
-                                    ...colour
-                                )
-                            }
-
-                            //The begin anew part
-                            colour = [colours[i], colours[i + 1], colours[i + 2], colours[i + 3]];
-                            count = 1;
-                        }
-                    }
-
-                    //Push the data once we hit the edge
-                    data.push(
-                        (count & 0xff00) >> 8,
-                        (count & 0x00ff),
-
-                        ...colour
-                    )
+                    console.log(`Layer ${name} compressed to ${savedBytes} bytes`);
                 }
 
                 //With the slight, and somewhat strange compression I added above I'm sure this will be good
-                const file = new Uint8Array(data);
+                const file = new Uint8Array(data.flat(5));
                 this.fileReader.onload = () => resolve(this.fileReader.result);
                 this.fileReader.readAsDataURL(new Blob([file]));
             });
