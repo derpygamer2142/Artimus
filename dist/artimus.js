@@ -1434,7 +1434,13 @@ window.artimus = {
 
                 savedBytes += 6;
                 return savedBytes;
-            }
+            },
+
+            //1 Color... pretty simple
+            (data, bytesPerLayer, palette, colours) => {
+                data.push(...palette[0]);
+                return 4;
+            },
         ]
 
         exportArtimus() {
@@ -1479,7 +1485,6 @@ window.artimus = {
 
                     //Determine a good encoding mode. See VV for a list
                                                   //==-- MODES --==//
-                    let encodingMode = 0;
                     let layerColours = Array.from(dataRaw.data).map(
                         (val, idx, arr) => (idx % 4 == 0) ? (//We need big ints since JS caps bitwise to 16 bits for some reason?
                                 (BigInt(arr[idx + 3]) << 24n) + 
@@ -1496,7 +1501,8 @@ window.artimus = {
                         Number((val & 0xff000000n) >> 24n)
                     ]);
 
-                    //FinD the mode finally
+                    //Find the mode finally
+                    let encodingMode = 0;
                     if (layerColours.length == 1) encodingMode = 2
                     else if (layerColours.length <= 256) encodingMode = 1;
                     
