@@ -1258,7 +1258,12 @@ window.artimus = {
                     (count & 0xff00) >> 8,
                     (count & 0x00ff),
 
-                    ...colour
+                    palette.findIndex((val) => (
+                        val[0] == colour[0] && 
+                        val[1] == colour[1] &&
+                        val[2] == colour[2] &&
+                        val[3] == colour[3]
+                    ))
                 )
 
                 savedBytes += 6;
@@ -1297,25 +1302,28 @@ window.artimus = {
                 return index;
             },
             
-            //TODO parse colour palette
             (data, imageData, index, bytesPerLayer) => {
                 let filled = 0;
 
+                const palette = [];
+                const paletteSize = data[index + 1] + 1;
+
+                index++;
+                for (let i = 0; i < paletteSize; i++) { 
+                    palette.push([data[index + 1], data[index + 2], data[index + 3], data[index + 4]]);
+                    index += 4;
+                }
+
                 while (filled < bytesPerLayer) {
                     const stripSize = (data[index + 1] << 8) + (data[index + 2]);
-                    const stripColor = [
-                        data[index + 3],
-                        data[index + 4],
-                        data[index + 5],
-                        data[index + 6]
-                    ];
 
                     let extended = Array(stripSize);
-                    extended.fill(stripColor);
+                    extended.fill(palette[data[index + 3]]);
                     imageData.set(extended.flat(2), filled);
                     filled += stripSize * 4;
 
-                    index += 6;
+                    console.log(data[index + 3], index, filled);
+                    index += 3;
                 }
 
                 return index;
@@ -1496,16 +1504,16 @@ window.artimus = {
 
                 //==-- LAYER FORMAT --==//
                 //Name Length : 3 bytes : Nobody should be more than 16777216 bytes... Right?
-                //Blend Mode  : 1 byte
                 //Encoding Mode : 1 byte
+                //Blend Mode  : 1 byte
                 //Name String : N bytes
                 //Data        : A bytes
                 for (let layerID in this.layers) {
                     const {name, blendMode, dataRaw} = this.layers[layerID];
                     const encodedName = this.tEncoder.encode(name);
 
-                    //Determine a good encoding mode. See VV for a list
-                                                  //==-- MODES --==//
+                    //Get colors for determining an encoding method. See VV for a list
+                                                                //==-- MODES --==//
                     let layerColours = Array.from(dataRaw.data).map(
                         (val, idx, arr) => (idx % 4 == 0) ? (//We need big ints since JS caps bitwise to 16 bits for some reason?
                                 (BigInt(arr[idx + 3]) << 24n) + 
@@ -1526,9 +1534,6 @@ window.artimus = {
                     let encodingMode = 0;
                     if (layerColours.length == 1) encodingMode = 2
                     else if (layerColours.length <= 256) encodingMode = 1;
-                    
-                    //Temporarily set encoding mode to 0 until I can provide decoding
-                    encodingMode = 0;
 
                     //Add layer header
                     data.push(
