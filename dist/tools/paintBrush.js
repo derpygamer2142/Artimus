@@ -69,6 +69,8 @@ artimus.tools.paintBrush = class extends artimus.tool {
 
                 this.eraserCircular(gl, rx, ry, toolProperties);
             }
+            
+            toolProperties.linePos = [x,y];
         }
         else if (toolProperties.pixelBrush) {
             //For non-AA line drawing;
@@ -83,6 +85,8 @@ artimus.tools.paintBrush = class extends artimus.tool {
 
                 this.drawCircular(gl, rx, ry, toolProperties);
             }
+            
+            toolProperties.linePos = [x,y];
         }
         //Smooth brush
         else {
@@ -97,10 +101,9 @@ artimus.tools.paintBrush = class extends artimus.tool {
                 gl.closePath(); //! We do it in this order or else firefox throws a fit.
                 gl.beginPath();
                 gl.moveTo(x,y);
+                toolProperties.linePos = [x,y];
             }
         }
-
-        toolProperties.linePos = [x,y];
     }
 
     mouseUp(gl, x, y, toolProperties) {

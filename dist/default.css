@@ -115,6 +115,10 @@ body {
     transition: 0ms background-color;
 }
 
+.artimus-button-selected {
+    background-color: var(--artimus-button-selected);
+}
+
 .artimus-layerCreationButton {
     border-radius: 8px;
     border-width: 0px;
@@ -126,6 +130,11 @@ body {
     border-radius: 16px;
 }
 
+.artimus-layerButtonHolder {
+    display: flex;
+    flex-direction: column;
+}
+
 .artimus-layerButton {
     width: auto;
     aspect-ratio: 1;
@@ -133,7 +142,31 @@ body {
 
     border-radius: 16px;
     border-width: 0px;
+
+    overflow: hidden;
 }
+
+.artimus-layerButton-thin {
+    width: 24px;
+    height: 12px;
+
+    border-radius: 16px;
+    border-width: 0px;
+
+    overflow: hidden;
+}
+
+.artimus-layerArrow { 
+    width: 100%;
+
+    position: relative;
+
+    top: 50%;
+    left: 50%;
+}
+
+.artimus-layerArrow-down { transform: scale(1, -1) translate(-50%, 50%); }
+.artimus-layerArrow-up { transform: translate(-50%, -50%); }
 
 .artimus-sideBarButton {
     display: flex;
@@ -148,10 +181,6 @@ body {
     margin-bottom: 4px;
 
     color: var(--artimus-text);
-}
-
-.artimus-sideBarButton-selected {
-    background-color: var(--artimus-button-selected);
 }
 
 .artimus-toolIcon {

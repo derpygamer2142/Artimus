@@ -2,6 +2,8 @@ window.artimus = {
     tools: {},
     maxHistory: 10,
 
+    defaultArrow: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="67.79628" height="19.99114" viewBox="0,0,67.79628,19.99114"><g transform="translate(-206.10043,-170.79353)"><g fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-miterlimit="10"><path d="M272.39671,189.28467c-0.45144,-8.7306 -24.09936,-17.06276 -32.46692,-16.99068c-7.9521,0.06851 -31.96292,7.81916 -32.32935,16.92539c-0.00186,0.04618 16.25066,-3.22684 32.24773,-3.1737c16.40198,0.05449 32.55854,3.43226 32.54855,3.23898z" /></g></g></svg>`,
+
     degreeToRad: (deg) => (deg * (3.1415962 / 180)),
     radToDegree: (rad) => (rad * (180 / 3.1415962)),
 
@@ -143,6 +145,7 @@ window.artimus = {
 
         blendMode = "source-over";
         bitmap = null;
+        visibility = true;
 
         get data() {
             if (this.dataRaw) return this.dataRaw.data;
@@ -290,6 +293,8 @@ window.artimus = {
         set height(value) { this.resize(this.width, value); }
         get height() { return this.#height; }
 
+        //Layers
+        layerHiddenAnimation = 0;
         #currentLayer = 0;
         set currentLayer(value) {
             this.setLayer(value);
@@ -305,8 +310,8 @@ window.artimus = {
         //CSS classes
         toolClass = "artimus-button artimus-sideBarButton artimus-tool ";
         layerClass = "artimus-button artimus-sideBarButton artimus-layer ";
-        toolClassSelected = "artimus-sideBarButton-selected artimus-tool-selected ";
-        layerClassSelected = "artimus-sideBarButton-selected artimus-layer-selected ";
+        toolClassSelected = "artimus-button-selected artimus-tool-selected ";
+        layerClassSelected = "artimus-button-selected artimus-layer-selected ";
 
         selection = [];
         selectionAnimation = 0;
@@ -412,17 +417,21 @@ window.artimus = {
             artimus.activeWorkspaces.push(this);
 
             const workspace = this;
-            const loop = () => {
+
+            let start = 0;
+            const loop = (ts) => {
                 if (!workspace) return;
 
-                workspace.renderLoop.call(workspace);
+                workspace.renderLoop.call(workspace, (ts - start) / 1000);
                 requestAnimationFrame(loop);
+
+                start = ts;
             }
 
             //Setup our grid then loop
             this.setGridSize(4);
             this.refreshGridPattern(() => {
-                loop();
+                loop(0.016);
             });
 
             this.refreshTranslation();
@@ -468,16 +477,25 @@ window.artimus = {
             }
         }
 
-        renderLoop() {
+        renderLoop(delta) {
             this.fullviewGL.drawImage(this.gridCanvas, 0, 0);
 
             this.renderComposite();
 
             this.fullviewGL.drawImage(this.compositeCanvas, 0, 0);
+
+            //Render hidden layers
+            if (!this.getLayerVisibility(this.currentLayer)) {
+                this.layerHiddenAnimation += delta * 5.0;
+                this.fullviewGL.globalAlpha = (Math.sin(this.layerHiddenAnimation) * 0.25) + 0.6;
+                this.fullviewGL.drawImage(this.editingCanvas, 0, 0);
+                this.fullviewGL.globalAlpha = 1;
+            }
+
             this.fullviewGL.drawImage(this.previewCanvas, 0, 0);
 
             if (this.hasSelection) {
-                this.selectionAnimation = (this.selectionAnimation + 0.1) % 6;
+                this.selectionAnimation = (this.selectionAnimation + (delta * 7.5)) % 6;
                 this.fullviewGL.setLineDash([4, 2]);
                 this.fullviewGL.lineDashOffset = this.selectionAnimation;
                 this.fullviewGL.strokeStyle = getComputedStyle(document.body).getPropertyValue("--artimus-selection-outline");
@@ -486,16 +504,18 @@ window.artimus = {
             }
         }
 
-        renderComposite() {
+        renderComposite(final) {
             this.compositeGL.clearRect(0, 0, this.width, this.height);
             for (let layerID in this.layers) {
                 const layer = this.layers[layerID];
                 this.compositeGL.globalCompositeOperation = layer.blendMode || "source-over";
 
-                if (layerID == this.currentLayer) this.compositeGL.drawImage(this.editingCanvas, 0, 0);
-                else {
-                    const bitmap = layer.bitmap;
-                    if (bitmap instanceof ImageBitmap) this.compositeGL.drawImage(bitmap, 0, 0);
+                if (layer.visibility) {
+                    if (layerID == this.currentLayer) this.compositeGL.drawImage(this.editingCanvas, 0, 0);
+                    else {
+                        const bitmap = layer.bitmap;
+                        if (bitmap instanceof ImageBitmap) this.compositeGL.drawImage(bitmap, 0, 0);
+                    }
                 }
             }
         }
@@ -844,10 +864,7 @@ window.artimus = {
         //Layer manipulation, for use inside of the library itself but exposed for people to use for their own purposes
         setLayer(ID, then) {
             return new Promise((resolve, reject) => {
-                if (typeof ID == "string") {
-                    const locID = this.layers.findIndex((layer) => layer.name == ID);
-                    if (locID != -1) ID = locID;
-                }
+                ID = this.getLayerIndex(ID);
 
                 if (typeof ID == "number") {
                     //Save current data to the layer position
@@ -877,6 +894,19 @@ window.artimus = {
                     reject(`Couldn't find or update layer ${ID}`);
                 }
             });
+        }
+
+        getLayerIndex(ID) {
+            if (typeof ID == "string") {
+                const locID = this.layers.findIndex((layer) => layer.name == ID);
+                if (locID != -1) ID = locID;
+            }
+
+            if (typeof ID == "number") {
+                return ID;
+            }
+
+            return;
         }
 
         getLayer(ID) {
@@ -909,6 +939,7 @@ window.artimus = {
             label.onclick = () => this.setLayer(element.targetLayer);
             layerData.label = label;
 
+            //Create CUGI bindings for the button, more specifically the label
             label.CUGI_CONTEXT = () => {
                 return [
                     { type: "button", text: "delete", onclick: () => this.removeLayer(element.targetLayer) },
@@ -921,32 +952,64 @@ window.artimus = {
                 return item;
             }
 
+            //This button changes depending on whether or not the layer was hidden
+            const hideButton = document.createElement("button");
+            hideButton.className = "artimus-button artimus-layerButton";
+            hideButton.innerText = "👁";
+            hideButton.onclick = () => {
+                this.setLayerVisibility(element.targetLayer, !this.getLayerVisibility(element.targetLayer));
+                hideButton.className = "artimus-button artimus-layerButton " + ((this.getLayerVisibility(element.targetLayer)) ? "" : "artimus-button-selected")
+            }
+
+            //This is the thing that holds the buttons that allow 
+            // you to move the layer up and down, 
+            // I may replace this with a drag and drop thing in the future
+            const layerButtonHolder = document.createElement("div");
+            layerButtonHolder.className = "artimus-layerButtonHolder";
+
             const upButton = document.createElement("button");
-            upButton.className = "artimus-button artimus-layerButton";
-            upButton.innerText = "^";
+            upButton.className = "artimus-button artimus-layerButton artimus-layerButton-thin";
+            upButton.appendChild(this.elementFromString(artimus.defaultArrow));
             upButton.onclick = () => {
                 this.moveLayer(element.targetLayer, 1);
             }
 
+            upButton.children[0].classList = "artimus-layerArrow artimus-layerArrow-up";
+
             const downButton = document.createElement("button");
-            downButton.className = "artimus-button artimus-layerButton";
-            downButton.innerText = "v";
+            downButton.className = "artimus-button artimus-layerButton artimus-layerButton-thin";
+            downButton.appendChild(this.elementFromString(artimus.defaultArrow));
             downButton.onclick = () => {
                 this.moveLayer(element.targetLayer, -1);
             }
 
-            element.appendChild(upButton);
-            element.appendChild(downButton);
+            downButton.children[0].classList = "artimus-layerArrow artimus-layerArrow-down";
+
+            layerButtonHolder.appendChild(upButton);
+            layerButtonHolder.appendChild(downButton);
+
+            element.appendChild(hideButton);
+            element.appendChild(layerButtonHolder);
             element.appendChild(label);
 
             return element;
         }
 
+        setLayerVisibility(ID, to) {
+            ID = this.getLayerIndex(ID);
+
+            if (typeof ID == "number") this.layers[ID].visibility = to == true;
+        }
+
+        getLayerVisibility(ID) {
+            ID = this.getLayerIndex(ID);
+
+            if (typeof ID == "number") return this.layers[ID].visibility;
+            return false;
+        }
+
         moveLayer(ID, by) {
-            if (typeof ID == "string") {
-                const locID = this.layers.findIndex((layer) => layer.name == ID);
-                if (locID != -1) ID = locID;
-            }
+            ID = this.getLayerIndex(ID);
 
             if (typeof ID == "number") {
                 const target = ID + by;
@@ -996,10 +1059,7 @@ window.artimus = {
 
         updateLayer(ID, then) {
             return new Promise((resolve, reject) => {
-                if (typeof ID == "string") {
-                    const locID = this.layers.findIndex((layer) => layer.name == ID);
-                    if (locID != -1) ID = locID;
-                }
+                ID = this.getLayerIndex(ID);
 
                 if (typeof ID == "number") {
                     this.layers[ID].updateBitmap().then(newBitmap => {
@@ -1322,7 +1382,6 @@ window.artimus = {
                     imageData.set(extended.flat(2), filled);
                     filled += stripSize * 4;
 
-                    console.log(data[index + 3], index, filled);
                     index += 3;
                 }
 
@@ -1409,7 +1468,6 @@ window.artimus = {
                 //Parse the image now
                 let imageData = new Uint8ClampedArray(bytesPerLayer);
                 
-                console.log(encodingMode);
                 index = this.decodingModes[encodingMode](data, imageData, index, bytesPerLayer);
 
                 this.createLayer(name, true);
@@ -1601,7 +1659,7 @@ window.artimus = {
                 format = format || "artimus";
 
                 //Just render the frame, and update the layer
-                this.renderComposite();
+                this.renderComposite(true);
 
                 //Force update it aswell
                 this.setLayer(this.currentLayer).then(() => {
