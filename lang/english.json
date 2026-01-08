@@ -24,6 +24,7 @@
     "artimus.toolProperty.jumbleWholeSquare": "Jumble Area",
     "artimus.toolProperty.pixelBrush": "Pixelated",
     "artimus.toolProperty.respectTransparency": "Do Transparency",
+    "artimus.toolProperty.pierceTransparency": "Pierce Transparency",
     
     "artimus.toolProperty.radius": "Radius",
     "artimus.toolProperty.points": "Points",

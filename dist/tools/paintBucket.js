@@ -62,7 +62,7 @@ artimus.tools.paintBucket = class extends artimus.tool {
             }
 
             targetCoord = this.coordToColourID(px, py, width);
-            const isTransparent = data[targetCoord + 3] == 0 || data[targetCoord + 3] == 255;
+            const isTransparent = (toolProperties.pierceTransparency) ? data[targetCoord + 3] <= 240 : data[targetCoord + 3] == 0 || data[targetCoord + 3] == 255;
 
             colorSet();
 
@@ -88,6 +88,7 @@ artimus.tools.paintBucket = class extends artimus.tool {
     CUGI(artEditor) { return [
         { target: artEditor.toolProperties, key: "fillColor", type: "color" },
         { target: artEditor.toolProperties, key: "respectTransparency", type: "boolean" },
+        { target: artEditor.toolProperties, key: "pierceTransparency", type: "boolean" },
     ]}
 
     properties = {

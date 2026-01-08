@@ -395,10 +395,10 @@ window.artimus = {
             this.gridCanvas = document.createElement("canvas");
 
             this.GL = this.editingCanvas.getContext("2d", { willReadFrequently: true });
-            this.fullviewGL = this.canvas.getContext("2d");
+            this.fullviewGL = this.canvas.getContext("2d", { alpha: false, desynchronized: true });
             this.compositeGL = this.compositeCanvas.getContext("2d");
             this.previewGL = this.previewCanvas.getContext("2d");
-            this.gridGL = this.gridCanvas.getContext("2d");
+            this.gridGL = this.gridCanvas.getContext("2d", { alpha: false });
 
             this.resize(640, 480);
             this.createLayer();
