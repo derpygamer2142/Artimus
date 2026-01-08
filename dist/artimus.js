@@ -313,15 +313,20 @@ window.artimus = {
         toolClassSelected = "artimus-button-selected artimus-tool-selected ";
         layerClassSelected = "artimus-button-selected artimus-layer-selected ";
 
+        //Selection stuff
         selection = [];
         selectionAnimation = 0;
         selectionPath = new Path2D();
         hasSelection = false;
 
+        //And finally...
+        projectStorage = {};
+
         //Objects and data needed for the artimus format
         tEncoder = new TextEncoder();
         tDecoder = new TextDecoder();
         magic = Array.from("COFE", char => String(char).charCodeAt(0));
+        jsonMagic = Array.from("JSON", char => String(char).charCodeAt(0));
 
         updatePosition() {
             //Setup some CSS
@@ -1480,6 +1485,40 @@ window.artimus = {
 
                 return index;
             },
+            //Format v2
+            (data, layer, bytesPerLayer, index) => {
+                //Decode name and blend mode
+                const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
+                const encodingMode = data[index + 4];
+                const visibility = data[index + 5] == 1;
+                const blendMode = artimus.blendModes[data[index + 6]];
+                index += 6;
+
+                //Extract name bytes and decode
+                let name = [];
+                for (let i = 0; i < nameLength; i++) {
+                    name.push(data[index + i + 1]);
+                }
+
+                index += name.length;
+                name = this.tDecoder.decode(new Uint8Array(name));
+
+                //Parse the image now
+                let imageData = new Uint8ClampedArray(bytesPerLayer);
+                
+                index = this.decodingModes[encodingMode](data, imageData, index, bytesPerLayer);
+
+                this.createLayer(name, true);
+
+                //Set layer data
+                this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
+                this.layers[layer + 1].blendMode = blendMode;
+
+                this.updateLayer(layer + 1);
+                this.setLayerVisibility(layer + 1, visibility);
+
+                return index;
+            },
         ];
         
         importArtimus(input) {
@@ -1524,6 +1563,22 @@ window.artimus = {
                         this.removeLayer(0)
                         this.setLayer(0);
                     });
+
+                    if (
+                        data[idx + 1] == this.jsonMagic[0] &&
+                        data[idx + 2] == this.jsonMagic[1] &&
+                        data[idx + 3] == this.jsonMagic[2] &&
+                        data[idx + 4] == this.jsonMagic[3]
+                    ) {
+                        idx += 4;
+                        
+                        try {
+                            const parsed = JSON.parse(this.tDecoder.decode(data.slice(idx + 1, data.length)));
+                            this.projectStorage = parsed;
+                        } catch (error) {
+                            console.error("Json header could possibly be corrupted :(");
+                        }
+                    }
                 });
             }
             else console.error("Artimus File invalid!");
@@ -1544,7 +1599,7 @@ window.artimus = {
                 //Layers : 2 bytes
                 let data = new Array(
                     ...this.magic,
-                    2,
+                    3,
                     
                     //Conver both width and height into their 3 byte components
                     (this.width & 0xff0000) >> 16,
@@ -1563,11 +1618,12 @@ window.artimus = {
                 //==-- LAYER FORMAT --==//
                 //Name Length : 3 bytes : Nobody should be more than 16777216 bytes... Right?
                 //Encoding Mode : 1 byte
+                //Visibility    : 1 byte : Will probably be shared with individual transparency in the future
                 //Blend Mode  : 1 byte
                 //Name String : N bytes
                 //Data        : A bytes
                 for (let layerID in this.layers) {
-                    const {name, blendMode, dataRaw} = this.layers[layerID];
+                    const {name, blendMode, dataRaw, visibility} = this.layers[layerID];
                     const encodedName = this.tEncoder.encode(name);
 
                     //Get colors for determining an encoding method. See VV for a list
@@ -1600,6 +1656,8 @@ window.artimus = {
                         (encodedName.length & 0x0000ff),
                         (encodingMode & 0xff),
 
+                        (visibility) ? 1 : 0,
+
                         artimus.blendModes.indexOf(blendMode) || 0,
                         ...encodedName,
                     );
@@ -1611,6 +1669,12 @@ window.artimus = {
 
                     console.log(`Layer ${name} compressed to ${savedBytes} bytes`);
                 }
+
+                data.push(
+                    ...this.jsonMagic,
+
+                    ...this.tEncoder.encode(JSON.stringify(this.projectStorage))
+                )
 
                 //With the slight, and somewhat strange compression I added above I'm sure this will be good
                 const file = new Uint8Array(data.flat(5));
