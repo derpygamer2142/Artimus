@@ -1729,24 +1729,22 @@ window.artimus = {
                                                                 //==-- MODES --==//
                     //Faster than a generator and a map.filter to use data.reduce
                     let layerColours = dataRaw.data.reduce((ac, _, ind) => {
-                        if (ind % 4 == 0) ac.push((
+                        if (ind % 4 == 0) ac.add((
                             (dataRaw.data[ind + 3] << 24 >>> 0) + 
                             (dataRaw.data[ind + 2] << 16 >>> 0) + 
                             (dataRaw.data[ind + 1] << 8 >>> 0) + 
                             dataRaw.data[ind]
                         ));
                         return ac;
-                    }, []);
+                    }, new Set());
 
                     //Appearently according to DDG I've gone and searched for something similar on stack overflow. thanks DDG
-                    layerColours = [... new Set(layerColours)].map((val) => [
+                    layerColours = [...layerColours].map((val) => [
                         val & 0x000000ff,
                         (val & 0x0000ff00) >>> 8,
                         (val & 0x00ff0000) >>> 16,
                         (val & 0xff000000) >>> 24
                     ]);
-
-                    console.log(layerColours);
 
                     //Find the mode finally
                     let encodingMode = 0;
