@@ -1628,13 +1628,16 @@ window.artimus = {
 
                     //Get colors for determining an encoding method. See VV for a list
                                                                 //==-- MODES --==//
-                    let layerColours = Array.from(dataRaw.data).map((val, idx, arr) => (idx % 4 == 0) ? (
-                        //Dumb evil JS bit hack, but convert to a number
-                            (arr[idx + 3] << 24 >>> 0) + 
-                            (arr[idx + 2] << 16 >>> 0) + 
-                            (arr[idx + 1] << 8 >>> 0) + 
-                            arr[idx]) 
-                        : null).filter(val => (val != null));
+                    //Faster than a generator and a map.filter to use data.reduce
+                    let layerColours = dataRaw.data.reduce((ac, _, ind) => {
+                        if (ind % 4 == 0) ac.push((
+                            (dataRaw.data[ind + 3] << 24 >>> 0) + 
+                            (dataRaw.data[ind + 2] << 24 >>> 0) + 
+                            (dataRaw.data[ind + 1] << 24 >>> 0) + 
+                            dataRaw.data[ind]
+                        ));
+                        return ac;
+                    }, []);
 
                     //Appearently according to DDG I've gone and searched for something similar on stack overflow. thanks DDG
                     layerColours = [... new Set(layerColours)].map((val) => [
