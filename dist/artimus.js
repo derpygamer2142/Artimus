@@ -1628,21 +1628,23 @@ window.artimus = {
 
                     //Get colors for determining an encoding method. See VV for a list
                                                                 //==-- MODES --==//
-                    let layerColours = Array.from(dataRaw.data).map(
-                        (val, idx, arr) => (idx % 4 == 0) ? (//We need big ints since JS caps bitwise to 16 bits for some reason?
-                                (BigInt(arr[idx + 3]) << 24n) + 
-                                (BigInt(arr[idx + 2]) << 16n) + 
-                                (BigInt(arr[idx + 1]) << 8n) + 
-                                BigInt(arr[idx])) 
+                    let layerColours = Array.from(dataRaw.data).map((val, idx, arr) => (idx % 4 == 0) ? (
+                        //Dumb evil JS bit hack
+                                (arr[idx + 3] << 24 >>> 0) + 
+                                (arr[idx + 2] << 16 >>> 0) + 
+                                (arr[idx + 1] << 8 >>> 0) + 
+                                arr[idx]) 
                         : null).filter(val => (val != null));
 
                     //Appearently according to DDG I've gone and searched for something similar on stack overflow. thanks DDG
                     layerColours = [... new Set(layerColours)].map((val) => [
-                        Number(val & 0x000000ffn),
-                        Number((val & 0x0000ff00n) >> 8n),
-                        Number((val & 0x00ff0000n) >> 16n),
-                        Number((val & 0xff000000n) >> 24n)
+                        val & 0x000000ff,
+                        (val & 0x0000ff00) >>> 8,
+                        (val & 0x00ff0000) >>> 16,
+                        (val & 0xff000000) >>> 24
                     ]);
+
+                    console.log(layerColours);
 
                     //Find the mode finally
                     let encodingMode = 0;
