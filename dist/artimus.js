@@ -1644,8 +1644,6 @@ window.artimus = {
                         (val & 0xff000000) >>> 24
                     ]);
 
-                    console.log(layerColours);
-
                     //Find the mode finally
                     let encodingMode = 0;
                     if (layerColours.length == 1) encodingMode = 2
