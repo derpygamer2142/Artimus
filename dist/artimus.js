@@ -261,7 +261,6 @@ window.artimus = {
         invZoom = 1;
         set zoom(value) {
             this.#zoom = Math.max(Math.min(value, 25), 0.25);
-            this.invZoom = 1 / this.#zoom;
             this.updatePosition();
         }
         get zoom() { return this.#zoom; }
@@ -339,6 +338,8 @@ window.artimus = {
                 "canvasWidth": `${this.width}px`,
                 "canvasHeight": `${this.height}px`
             });
+            
+            this.invZoom = 1 / this.#zoom;
         }
 
         //General helper functions ported from Coffee Engine
