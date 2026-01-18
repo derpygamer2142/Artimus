@@ -586,6 +586,13 @@ window.artimus = {
             this.container.appendChild(this.canvasArea);
             this.canvasArea.appendChild(this.canvas);
 
+            this.layerCreationName.onkeydown = (event) => {
+                if (event.key == "Enter") {
+                    this.createLayer(this.layerCreationName.value);
+                    this.layerCreationName.value = "";
+                }
+            }
+
             this.layerCreationButton.onclick = () => {
                 if (!this.layerExists(this.layerCreationName.value)) {
                     this.createLayer(this.layerCreationName.value);
