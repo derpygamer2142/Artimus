@@ -1353,6 +1353,7 @@ window.artimus = {
             this.historyIndex++;
 
             this.GL.putImageData(this.layerHistory[this.historyIndex], 0, 0);
+            this.dirty = true;
         }
 
         redo() {
@@ -1360,6 +1361,7 @@ window.artimus = {
             this.historyIndex--;
 
             this.GL.putImageData(this.layerHistory[this.historyIndex], 0, 0);
+            this.dirty = true;
         }
 
         new(width, height, then) {
