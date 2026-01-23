@@ -385,7 +385,7 @@ window.artimus = {
         //fonts grab a small assorted list of fonts.
         getFonts() {
             return new Promise((resolve, reject) => {
-                if (!window.queryLocalFonts) window.queryLocalFonts().then((fontList) => resolve(fontList));
+                if (window.queryLocalFonts) window.queryLocalFonts().then((fontList) => resolve(fontList));
                 else resolve([
                     { family: "Serif", fullName: "Serif", postscriptName: "Serif", style: "Regular" },
                     { family: "Sans-serif", fullName: "Sans-serif", postscriptName: "Sans-serif", style: "Regular" },
