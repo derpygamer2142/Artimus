@@ -381,6 +381,21 @@ window.artimus = {
             return element;
         }
 
+        //Grab fonts available for use in the editor, if we can't get all
+        //fonts grab a small assorted list of fonts.
+        getFonts() {
+            return new Promise((resolve, reject) => {
+                if (!window.queryLocalFonts) window.queryLocalFonts().then((fontList) => resolve(fontList));
+                else resolve([
+                    { family: "Serif", fullName: "Serif", postscriptName: "Serif", style: "Regular" },
+                    { family: "Sans-serif", fullName: "Sans-serif", postscriptName: "Sans-serif", style: "Regular" },
+                    { family: "Monospace", fullName: "Monospace", postscriptName: "Monospace", style: "Regular" },
+                    { family: "Cursive", fullName: "Cursive", postscriptName: "Cursive", style: "Regular" },
+                    { family: "Fantasy", fullName: "Fantasy", postscriptName: "Fantasy", style: "Regular" },
+                ])
+            })
+        }
+
         //Host/Parasite relationship
         host = document.createElement("div");
 
