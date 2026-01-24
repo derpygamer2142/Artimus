@@ -58,7 +58,8 @@ artimus.tools.eraser = class extends artimus.tool {
 
                 gl.moveTo(x,y);
                 gl.beginPath();
-                gl.arc(x, y, (toolProperties.strokeSize / 2) - 1, 0, Math.PI * 2);
+                if (toolProperties.strokeSize > 1) gl.arc(x, y, (toolProperties.strokeSize / 2) - 1, 0, Math.PI * 2);
+                else gl.rect(x, y, 1, 1);
                 gl.stroke();
                 gl.fill();
                 gl.closePath();

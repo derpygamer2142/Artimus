@@ -73,7 +73,6 @@ artimus.tools.text = class extends artimus.tool {
 
                     if (toolProperties.pixelBrush) gl.filter = this.cssFilter;
 
-
                     //Fix stroke style if need be
                     gl.strokeStyle = toolProperties.strokeColor;
                     gl.lineWidth = toolProperties.strokeSize;
