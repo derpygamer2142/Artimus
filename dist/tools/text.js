@@ -3,21 +3,103 @@ artimus.tools.text = class extends artimus.tool {
 
     mouseDown(gl, x, y, toolProperties) {
         this.workspace.requestKeyboard();
+
+        toolProperties.x = x;
+        toolProperties.y = y;
+
+        if (!toolProperties.typing) {
+            toolProperties.text = "";
+            toolProperties.typing = true;
+        }
     }
 
-    keyPressed(gl, x, y, vx, vy, toolProperties) {
-        
+    renderText(gl, toolProperties, preview) {
+        //Set attributes
+        gl.fillStyle = toolProperties.fillColor;
+        gl.strokeStyle = toolProperties.strokeColor;
+        gl.lineWidth = toolProperties.strokeSize;
+        gl.font = `${toolProperties.textSize}px serif`;
+
+        //Ready the linemen
+        const split = toolProperties.text.split("\n");
+        const lineHeight = gl.measureText("■").width * toolProperties.lineSpacing;
+
+        //ChAAARRRGEEEE!
+        let y = toolProperties.y;
+        for (let line in split) {
+            const lineText = split[line];
+
+            if (toolProperties.strokeSize > 0) {
+                gl.strokeText(lineText, toolProperties.x, y);
+            }
+            gl.fillText(lineText, toolProperties.x, y);
+
+            if (preview && line == split.length - 1) {
+                gl.strokeStyle = getComputedStyle(document.body).getPropertyValue("--artimus-eraser-outline");
+                const width = gl.measureText(lineText).width;
+
+                y -= lineHeight / 1.5;
+                gl.strokeRect(toolProperties.x, y, width, lineHeight);
+            }
+
+            y += lineHeight;
+        }
+    }
+
+    keyPressed(gl, event, toolProperties) {
+        if (toolProperties.typing) {
+            const { key } = event;
+            if (key.length == 1) {
+                toolProperties.text += key;
+            }
+            else {
+                switch (key.toLowerCase()) {
+                    case "enter":
+                        if (event.shiftKey) {
+                            toolProperties.text += "\n";
+                        }
+                        else {
+                            this.renderText(gl, toolProperties);
+
+                            toolProperties.typing = false;
+                            toolProperties.text = "";
+                            
+                            this.workspace.dirty = true;
+                        }
+                        break;
+
+                    case "backspace":
+                        toolProperties.text = toolProperties.text.substring(0, toolProperties.text.length - 1);
+                        break;
+                
+                    default:
+                        break;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    preview(gl, x, y, toolProperties) {
+        if (toolProperties.typing) this.renderText(gl, toolProperties, true);
     }
 
     CUGI(artEditor) { return [
+        { target: artEditor.toolProperties, key: "textSize", type: "int", min: 1 },
+        { target: artEditor.toolProperties, key: "lineSpacing", type: "float" },
+        { target: artEditor.toolProperties, key: "fillColor", type: "color" },
         { target: artEditor.toolProperties, key: "strokeColor", type: "color" },
-        { target: artEditor.toolProperties, key: "strokeSize", type: "int" },
+        { target: artEditor.toolProperties, key: "strokeSize", type: "int", min: 0 },
         { target: artEditor.toolProperties, key: "pixelBrush", type: "boolean" },
     ]}
 
     properties = {
+        textSize: 24,
+        lineSpacing: 1.5,
+        fillColor: "#000000",
         strokeColor: "#000000",
-        strokeSize: 2,
+        strokeSize: 0,
         pixelBrush: false,
     }
 }

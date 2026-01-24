@@ -103,9 +103,18 @@
                 });
 
                 input.onchange = CUGI.macros.onchange(data, input, null, (value) => {
+                    //Clamping
+                    const initial = value;
+                    if (data.min !== undefined) value = Math.max(data.min, value);
+                    if (data.max !== undefined) value = Math.min(data.max, value);
+                    if (initial != value) input.value = value;
+
                     if (data.isRadians) return CUGI.macros.degToRad(value);
                     return value;
                 });
+                
+                if (data.min !== undefined) input.value = Math.max(data.min, input.value);
+                if (data.max !== undefined) input.value = Math.min(data.max, input.value);
 
                 return input;
             },
@@ -162,7 +171,18 @@
                     disabled: (typeof data.disabled == "function") ? data.disabled() : data.disabled
                 });
 
-                input.onchange = CUGI.macros.onchange(data, input, null, Math.floor);
+                input.onchange = CUGI.macros.onchange(data, input, null, (value) => {
+                    //Clamping
+                    const initial = value;
+                    if (data.min !== undefined) value = Math.max(data.min, value);
+                    if (data.max !== undefined) value = Math.min(data.max, value);
+                    if (initial != value) input.value = value;
+
+                    return Math.floor(value);
+                });
+
+                if (data.min !== undefined) input.value = Math.max(data.min, input.value);
+                if (data.max !== undefined) input.value = Math.min(data.max, input.value);
 
                 return input;
             },

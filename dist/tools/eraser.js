@@ -76,7 +76,7 @@ artimus.tools.eraser = class extends artimus.tool {
     }
 
     CUGI(artEditor) { return [
-        { target: artEditor.toolProperties, key: "strokeSize", type: "int" },
+        { target: artEditor.toolProperties, key: "strokeSize", type: "int", min: 1 },
         { target: artEditor.toolProperties, key: "circular", type: "boolean" },
     ]}
 

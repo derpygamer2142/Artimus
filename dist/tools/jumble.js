@@ -118,7 +118,7 @@ artimus.tools.jumble = class extends artimus.tool {
     }
 
     CUGI(artEditor) { return [
-        { target: artEditor.toolProperties, key: "jumbleSize", type: "int" },
+        { target: artEditor.toolProperties, key: "jumbleSize", type: "int", min: 1 },
         { target: artEditor.toolProperties, key: "jumbleWholeSquare", type: "boolean" },
         { target: artEditor.toolProperties, key: "mix", type: "slider", min: 0, max: 1, step: 0.05 },
     ]}

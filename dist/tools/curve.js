@@ -85,7 +85,7 @@ artimus.tools.curve = class extends artimus.tools.line {
 
     CUGI(artEditor) { return [
         { target: artEditor.toolProperties, key: "strokeColor", type: "color" },
-        { target: artEditor.toolProperties, key: "strokeSize", type: "int" },
+        { target: artEditor.toolProperties, key: "strokeSize", type: "int", min: 1 },
         { target: artEditor.toolProperties, key: "pixelBrush", type: "boolean" },
     ]}
 

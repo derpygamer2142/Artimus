@@ -43,8 +43,8 @@ artimus.tools.rectangle = class extends artimus.tool {
     CUGI(artEditor) { return [
         { target: artEditor.toolProperties, key: "fillColor", type: "color" },
         { target: artEditor.toolProperties, key: "strokeColor", type: "color" },
-        { target: artEditor.toolProperties, key: "strokeSize", type: "int" },
-        { target: artEditor.toolProperties, key: "cornerRounding", type: "int" },
+        { target: artEditor.toolProperties, key: "strokeSize", type: "int", min: 1 },
+        { target: artEditor.toolProperties, key: "cornerRounding", type: "int", min: 0 },
     ]}
 
     properties = {

@@ -692,6 +692,7 @@ window.artimus = {
                     }
 
                     const position = this.getCanvasPosition(event.clientX, event.clientY);
+                    this.lastPosition = position;
                     
                     if (this.toolFunction.preview) {
                         //For previews
@@ -719,6 +720,25 @@ window.artimus = {
                         this.scrollX -= (event.deltaX) * this.invZoom;
                         this.scrollY -= (event.deltaY) * this.invZoom;
                         this.zoom += event.deltaZ / -100;
+                    }
+                },
+
+                keyPressed: (event) => {
+                    if (event.key.toLowerCase() == "z" && event.ctrlKey) {
+                        //Determine undo/redo
+                        if (event.shiftKey) {
+                            this.redo();
+                        }
+                        else {
+                            this.undo();
+                        }
+                    }
+
+                    if (this.toolFunction.keyPressed) {
+                        if (this.toolFunction.keyPressed(this.GL, event, this.toolProperties)) event.preventDefault();
+                        
+                        this.previewGL.clearRect(0, 0, this.width, this.height);
+                        this.toolFunction.preview(this.previewGL, ...this.lastPosition, this.toolProperties);                        
                     }
                 }
             },
@@ -815,6 +835,12 @@ window.artimus = {
             }
         }
 
+        requestKeyboard() {
+            if (navigator.virtualKeyboard) {
+                navigator.virtualKeyboard.show()
+            }
+        }
+
         addControls() {
             //Drawing
             this.canvas.addEventListener("contextmenu", (event) => {
@@ -826,22 +852,11 @@ window.artimus = {
             this.container.addEventListener("mouseup", this.controlSets.kbMouse.mouseUp);
             this.canvasArea.addEventListener("mousemove", this.controlSets.kbMouse.mouseMove);
             this.canvasArea.addEventListener("wheel", this.controlSets.kbMouse.mouseWheel, { passive: false });
+            document.addEventListener("keydown", this.controlSets.kbMouse.keyPressed);
 
             this.canvasArea.addEventListener("touchstart", this.controlSets.touch.fingerDown);
             this.canvasArea.addEventListener("touchmove", this.controlSets.touch.fingerMove);
             this.canvasArea.addEventListener("touchend", this.controlSets.touch.fingerUp);
-
-            document.addEventListener("keydown", (event) => {
-                if (event.key.toLowerCase() == "z" && event.ctrlKey) {
-                    //Determine undo/redo
-                    if (event.shiftKey) {
-                        this.redo();
-                    }
-                    else {
-                        this.undo();
-                    }
-                }
-            })
         }
 
         refreshTranslation() {
