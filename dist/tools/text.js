@@ -35,10 +35,12 @@ artimus.tools.text = class extends artimus.tool {
             gl.fillText(lineText, toolProperties.x, y);
 
             if (preview && line == split.length - 1) {
+                gl.lineWidth = 1;
                 gl.strokeStyle = getComputedStyle(document.body).getPropertyValue("--artimus-eraser-outline");
+
                 const width = gl.measureText(lineText).width;
 
-                y -= lineHeight / 1.5;
+                y -= lineHeight / 1.75;
                 gl.strokeRect(toolProperties.x, y, width, lineHeight);
             }
 

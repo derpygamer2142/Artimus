@@ -25,6 +25,9 @@
     "artimus.toolProperty.pixelBrush": "Pixelated",
     "artimus.toolProperty.respectTransparency": "Do Transparency",
     "artimus.toolProperty.pierceTransparency": "Pierce Transparency",
+
+    "artimus.toolProperty.textSize": "Text Size",
+    "artimus.toolProperty.lineSpacing": "Line Size",
     
     "artimus.toolProperty.radius": "Radius",
     "artimus.toolProperty.points": "Points",
