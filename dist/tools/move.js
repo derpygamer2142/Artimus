@@ -176,9 +176,7 @@ artimus.tools.move = class extends artimus.tool {
         }
     }
 
-    undo(gl, previewGL, toolProperties) {
-        if (this.historyPosition > 0) this.historyPosition -= 1;
-
+    moveToUndo() {
         //Undo.
         this.workspace.selection = [...this.undoQueue[this.historyPosition].selection];
         this.angle = this.undoQueue[this.historyPosition].angle;
@@ -189,24 +187,17 @@ artimus.tools.move = class extends artimus.tool {
         this.imageHeight = this.undoQueue[this.historyPosition].imageHeight;
 
         this.updatePositions();
+    }
 
+    undo(gl, previewGL, toolProperties) {
+        if (this.historyPosition > 0) this.historyPosition -= 1;
+        this.moveToUndo();
         return true;
     }
 
     redo(gl, previewGL, toolProperties) {
         if (this.historyPosition < this.undoQueue.length - 1) this.historyPosition += 1;
-
-        //Undo.
-        this.workspace.selection = [...this.undoQueue[this.historyPosition].selection];
-        this.angle = this.undoQueue[this.historyPosition].angle;
-        this.offsetAngle = this.undoQueue[this.historyPosition].offsetAngle;
-        this.imageX = this.undoQueue[this.historyPosition].imageX;
-        this.imageY = this.undoQueue[this.historyPosition].imageY;
-        this.imageWidth = this.undoQueue[this.historyPosition].imageWidth;
-        this.imageHeight = this.undoQueue[this.historyPosition].imageHeight;
-
-        this.updatePositions();
-
+        this.moveToUndo();
         return true;
     }
 
