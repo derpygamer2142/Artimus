@@ -178,6 +178,9 @@ artimus.tools.move = class extends artimus.tool {
 
     undo(gl, previewGL, toolProperties) {
         if (this.historyPosition > 0) this.historyPosition -= 1;
+        else {
+            return false;
+        }
 
         //Undo.
         this.workspace.selection = [...this.undoQueue[this.historyPosition].selection];
