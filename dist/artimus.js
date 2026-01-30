@@ -147,6 +147,9 @@ window.artimus = {
         selected(gl, previewGL, toolProperties) {}
         deselected(gl, previewGL, toolProperties) {}
 
+        undo(gl, previewGL, toolProperties) {}
+        redo(gl, previewGL, toolProperties) {}
+
         CUGI() { return [] }
 
         inSelection(gl, x, y) {
@@ -1487,6 +1490,8 @@ window.artimus = {
         }
 
         undo() {
+            if (this.toolFunction.undo && this.toolFunction.undo(this.gl, this.previewGL, this.toolProperties)) return;
+
             if (this.historyIndex >= this.layerHistory.length - 1) return;
             this.historyIndex++;
 
@@ -1495,6 +1500,8 @@ window.artimus = {
         }
 
         redo() {
+            if (this.toolFunction.redo && this.toolFunction.redo(this.gl, this.previewGL, this.toolProperties)) return;
+
             if (this.historyIndex <= 0) return;
             this.historyIndex--;
 
