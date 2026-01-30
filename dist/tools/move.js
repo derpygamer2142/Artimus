@@ -10,6 +10,19 @@ artimus.tools.move = class extends artimus.tool {
         this.height = (this.workspace.hasSelection) ? selectionMaxY - selectionMinY : this.workspace.height;
     }
 
+    drawImage(gl) {
+        //Calculate values needed for our matrix
+        const sin = Math.sin(this.angle - this.offsetAngle);
+        const cos = Math.cos(this.angle - this.offsetAngle);
+        const offsetX = this.imageX + (this.imageWidth / 2);
+        const offsetY = this.imageY + (this.imageHeight / 2);
+
+        //Set the image and draw the matrix
+        gl.setTransform(cos, sin, -sin, cos, offsetX, offsetY);
+        gl.drawImage(this.bitmap, (this.imageWidth / -2), (this.imageHeight / -2));
+        gl.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
     selected(gl, previewGL, toolProperties) {
         let { selectionMinX, selectionMinY, selectionMaxX, selectionMaxY } = this.workspace;
         
@@ -51,8 +64,7 @@ artimus.tools.move = class extends artimus.tool {
     }
 
     deselected(gl, previewGL, toolProperties) {
-        gl.drawImage(this.bitmap, this.x, this.y);
-        if (this.bitmap) this.bitmap.close();
+        this.drawImage(gl);
         this.workspace.dirty = true;
     }
 
@@ -63,6 +75,7 @@ artimus.tools.move = class extends artimus.tool {
             this.dragging = true;
             this.rotating = false;
 
+            //Check to see if we are touching one of the rotation circles, if so rotate it.
             if (
                 this.isInCircle(x, y, this.x, this.y, 3) ||
                 this.isInCircle(x, y, this.x + this.width, this.y, 3) ||
@@ -84,10 +97,12 @@ artimus.tools.move = class extends artimus.tool {
     mouseMove(gl, x, y, vx, vy, toolProperties) {
         if (this.dragging) {
             if (this.rotating) {
+                //Find offset angle
                 this.angle = Math.atan2(this.cy - y, this.cx - x) - this.initialAngle;
                 const sin = Math.sin(-this.angle);
                 const cos = Math.cos(-this.angle);
 
+                //Move selection points
                 const selection = this.workspace.selection;
                 for (let i = 0; i < this.initialSelection.length; i+=2) {
                     const x = this.initialSelection[i] - this.cx;
@@ -97,10 +112,12 @@ artimus.tools.move = class extends artimus.tool {
                     selection[i + 1] = (y * cos - x * sin) + this.cy; 
                 }
 
+                //Update our selection
                 this.workspace.selection = selection;
                 this.updatePositions();
             }
             else {
+                //Move the image and the selection pointss
                 this.imageX += vx;
                 this.imageY += vy;
 
@@ -133,15 +150,10 @@ artimus.tools.move = class extends artimus.tool {
     }
 
     preview(gl, x, y, toolProperties) {
-        const sin = Math.sin(this.angle - this.offsetAngle);
-        const cos = Math.cos(this.angle - this.offsetAngle);
-        const offsetX = this.imageX + (this.imageWidth / 2);
-        const offsetY = this.imageY + (this.imageHeight / 2);
 
+        //Set the image and draw the matrix
         this.workspace.applySelectionToPreview();
-        gl.setTransform(cos, sin, -sin, cos, offsetX, offsetY);
-        gl.drawImage(this.bitmap, (this.imageWidth / -2), (this.imageHeight / -2));
-        gl.setTransform(1, 0, 0, 1, 0, 0);
+        this.drawImage(gl);
         this.workspace.clearSelectionFromPreview();
         
         gl.strokeStyle = getComputedStyle(document.body).getPropertyValue("--artimus-selection-outline");

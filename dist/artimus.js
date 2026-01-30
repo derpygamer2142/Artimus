@@ -1069,11 +1069,14 @@ window.artimus = {
             this.selectionMaxY = -Infinity;
 
             for (let i = 0; i < this.selection.length; i+=2) {
-                if (this.#selection[i] < this.selectionMinX) { this.selectionMinX = this.#selection[i] }
-                if (this.#selection[i + 1] < this.selectionMinY) { this.selectionMinY = this.#selection[i + 1] }
+                this.#selection[i] = this.#selection[i];
+                this.#selection[i + 1] = this.#selection[i + 1];
 
-                if (this.#selection[i] > this.selectionMaxX) { this.selectionMaxX = this.#selection[i] }
-                if (this.#selection[i + 1] > this.selectionMaxY) { this.selectionMaxY = this.#selection[i + 1] }
+                if (this.#selection[i] < this.selectionMinX) { this.selectionMinX = Math.floor(this.#selection[i]) }
+                if (this.#selection[i + 1] < this.selectionMinY) { this.selectionMinY = Math.floor(this.#selection[i + 1]) }
+
+                if (this.#selection[i] > this.selectionMaxX) { this.selectionMaxX = Math.floor(this.#selection[i]) }
+                if (this.#selection[i + 1] > this.selectionMaxY) { this.selectionMaxY = Math.floor(this.#selection[i + 1]) }
             }
 
             this.updateSelectionPath();
@@ -1093,8 +1096,8 @@ window.artimus = {
 
                 //Create selection path
                 for (let i = 0; i < this.selection.length; i+=2) {
-                    if (i == 0) this.selectionPath.moveTo(this.selection[i] + 0.5, this.selection[i + 1] + 0.5);
-                    else this.selectionPath.lineTo(this.selection[i] + 0.5, this.selection[i + 1] + 0.5);
+                    if (i == 0) this.selectionPath.moveTo(Math.floor(this.selection[i]) + 0.5, Math.floor(this.selection[i + 1]) + 0.5);
+                    else this.selectionPath.lineTo(Math.floor(this.selection[i]) + 0.5, Math.floor(this.selection[i + 1]) + 0.5);
                 }
                 //Finally end it
                 this.selectionPath.lineTo(this.selection[0] + 0.5, this.selection[1] + 0.5);
