@@ -1,5 +1,5 @@
 artimus.tools.move = class extends artimus.tool {
-    get icon() { return '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="70.5" height="70.5" viewBox="0,0,70.5,70.5"> <g transform="translate(-204.75002,-144.75)">    <g data-paper-data="{&quot;isPaintingLayer&quot;:true}" fill-rule="nonzero" stroke="none" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" style="mix-blend-mode: normal">        <path d="M204.75003,215.25v-70.5h70.5v70.5z" fill="none" stroke-width="0"/>        <path d="M220.9868,205.17696c1.77179,-0.89842 3.45323,-2.83003 3.92284,-4.18449c0.48941,-2.20805 2.09187,-5.70927 4.03585,-6.94886c1.41138,-1.79045 6.7982,-2.72387 8.25105,-0.51354c3.63129,2.41038 4.42564,4.90457 4.65906,6.97496c0.87449,2.30301 -2.19833,6.25534 -4.02505,7.55363c-2.70649,1.77061 -6.09868,1.76254 -9.25182,2.13584c-3.36677,0.39859 -5.03047,-0.4888 -7.98273,-1.41774c-0.53432,-0.4212 -3.55958,-2.15572 -3.34232,-2.965c0.23096,-0.8603 2.73102,-0.52502 3.38089,-0.60196l0.28441,-0.03367c0,0 0.02808,-0.00332 0.06782,0.00082z" fill="currentColor" stroke-width="0.5"/>        <path d="M254.7307,185.57527c-5.41655,12.21861 -8.83657,10.44178 -13.17454,8.51874c-4.33797,-1.92303 -7.95119,-3.26405 -2.53464,-15.48266c5.41655,-12.21861 17.81172,-30.68787 22.14969,-28.76483c4.33797,1.92304 -1.02396,23.51014 -6.4405,35.72876z" fill="currentColor" stroke-width="0"/></g></g></svg><!--rotationCenter:35.249975000000006:35.25000499999999-->'; }
+    get icon() { return '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="75.93583" height="75.93583" viewBox="0,0,75.93583,75.93583"><g transform="translate(-202.03209,-142.03209)"><g stroke-width="0" stroke-miterlimit="10"><path d="M216.20738,187.03519l-1.85673,-12.92663l49.19724,-1.1261l1.85673,12.92663z" fill="currentColor" stroke="currentColor"/><path d="M245.3687,170.74569l-13.43814,0.30759l-2.0906,-14.55479l13.43814,-0.30759z" fill="currentColor" stroke="currentColor"/><path d="M234.5469,189.26829l13.43814,-0.30759l2.0906,14.55479l-13.43814,0.30759z" fill="currentColor" stroke="currentColor"/><path d="M203.40364,181.13846l10.67294,-10.24891l2.78023,19.35606z" fill="currentColor" stroke="none"/><path d="M265.83902,189.12443l-2.78023,-19.35606l13.53758,9.69474z" fill="currentColor" stroke="none"/><path d="M245.31971,215.20336l-12.03899,-11.4072l20.12198,-0.46058z" fill="currentColor" stroke="none"/><path d="M246.63488,156.21782l-20.12198,0.46058l8.69384,-11.88177z" fill="currentColor" stroke="none"/><path d="M202.03209,217.96791v-75.93583h75.93583v75.93583z" fill="none" stroke="none"/></g></g></svg>'; }
     constructive = false;
 
     tp = (Math.PI * 2);
@@ -111,9 +111,7 @@ artimus.tools.move = class extends artimus.tool {
             if (this.rotating) {
                 //Find offset angle
                 this.angle = Math.atan2(this.cy - y, this.cx - x) - this.initialAngle;
-                if (this.shiftHeld) {
-                    this.angle = (Math.floor((this.angle / this.tp) * 24) / 24) * this.tp;
-                }
+                if (this.shiftHeld) this.angle = (Math.floor((this.angle / this.tp) * 24) / 24) * this.tp;
                 
                 const sin = Math.sin(-this.angle);
                 const cos = Math.cos(-this.angle);

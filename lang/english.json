@@ -13,6 +13,7 @@
     "artimus.tool.selectionRectangle": "Selection Rectangle",
     "artimus.tool.selectionCircle": "Selection Circle",
     "artimus.tool.selectionLasso": "Selection Lasso",
+    "artimus.tool.move": "Move",
 
     "artimus.toolProperty.strokeColor": "Stroke Color",
     "artimus.toolProperty.fillColor": "Fill Color",
