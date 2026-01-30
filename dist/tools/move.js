@@ -27,7 +27,6 @@ artimus.tools.move = class extends artimus.tool {
         });
 
         this.historyPosition = this.undoQueue.length - 1;
-        console.log(this.historyPosition);
     }
 
     drawImage(gl) {
@@ -179,10 +178,9 @@ artimus.tools.move = class extends artimus.tool {
 
     undo(gl, previewGL, toolProperties) {
         if (this.historyPosition > 0) this.historyPosition -= 1;
-        console.log(this.historyPosition);
 
         //Undo.
-        this.workspace.selection = this.undoQueue[this.historyPosition].selection;
+        this.workspace.selection = [...this.undoQueue[this.historyPosition].selection];
         this.angle = this.undoQueue[this.historyPosition].angle;
         this.offsetAngle = this.undoQueue[this.historyPosition].offsetAngle;
         this.imageX = this.undoQueue[this.historyPosition].imageX;
