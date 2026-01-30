@@ -112,7 +112,7 @@ artimus.tools.move = class extends artimus.tool {
                 //Find offset angle
                 this.angle = Math.atan2(this.cy - y, this.cx - x) - this.initialAngle;
                 if (this.shiftHeld) {
-                    this.angle = (Math.floor((this.angle / this.tp) * 15) / 15) * this.tp;
+                    this.angle = (Math.floor((this.angle / this.tp) * 24) / 24) * this.tp;
                 }
                 
                 const sin = Math.sin(-this.angle);
