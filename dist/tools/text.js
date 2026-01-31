@@ -99,6 +99,10 @@ artimus.tools.text = class extends artimus.tool {
         }
     }
 
+    selected(gl, previewGL, toolProperties) {
+        this.history = [];
+    }
+
     insertCharacterAt(text, position, character) {
         //Doing this is strange, but it works
         return text.substring(0, position) + 
@@ -118,6 +122,9 @@ artimus.tools.text = class extends artimus.tool {
             const text = toolProperties.text;
 
             if (key.length == 1) {
+                if (key == " ") {
+
+                }
                 toolProperties.text = this.insertCharacterAt(text, toolProperties.pointerPosition, key);
                 toolProperties.pointerPosition++;
             }

@@ -18,7 +18,6 @@ artimus.tools.move = class extends artimus.tool {
 
         this.undoQueue.push({
             angle: this.angle,
-            offsetAngle: this.offsetAngle,
             imageX: this.imageX,
             imageY: this.imageY,
             imageWidth: this.imageWidth,
@@ -31,14 +30,9 @@ artimus.tools.move = class extends artimus.tool {
 
     drawImage(gl) {
         //Calculate values needed for our matrix
-        const sin = Math.sin(this.angle - this.offsetAngle);
-        const cos = Math.cos(this.angle - this.offsetAngle);
-        const offsetX = this.imageX + (this.imageWidth / 2);
-        const offsetY = this.imageY + (this.imageHeight / 2);
-
         //Set the image and draw the matrix
-        gl.setTransform(cos, sin, -sin, cos, offsetX, offsetY);
-        gl.drawImage(this.bitmap, (this.imageWidth / -2), (this.imageHeight / -2));
+        gl.setTransform(...this.matrix);
+        gl.drawImage(this.bitmap, 0, 0);
         gl.setTransform(1, 0, 0, 1, 0, 0);
     }
 
@@ -55,35 +49,43 @@ artimus.tools.move = class extends artimus.tool {
             selectionMaxX = this.workspace.width; selectionMaxY = this.workspace.height;
         }
 
-        createImageBitmap(this.imageData).then(bitmap => {
-            this.bitmap = bitmap;
-            this.ready = true;
-            this.updatePositions();
+        if (selectionMaxX - selectionMinX > 0 && selectionMaxY - selectionMinY > 0) {
+            createImageBitmap(this.imageData).then(bitmap => {
+                this.bitmap = bitmap;
+                this.ready = true;
+                this.updatePositions();
 
-            //Setup initial variables
-            this.imageX = this.x;
-            this.imageY = this.y;
-            this.imageWidth = this.width;
-            this.imageHeight = this.height;
-        
-            this.angle = 0;
-            this.offsetAngle = 0;
-            this.initialAngle = 0;
-            this.undoQueue = [];
-            this.historyPosition = 0;
-
-            gl.clearRect(
-                selectionMinX,
-                selectionMinY,
-                selectionMaxX - selectionMinX,
-                selectionMaxY - selectionMinY
-            );
+                //Setup initial variables
+                this.imageX = this.x;
+                this.imageY = this.y;
+                this.imageWidth = this.width;
+                this.imageHeight = this.height;
             
-            this.updateHistory();
+                //This is used for the actual transformation of the image
+                this.matrix = [
+                    1, 0, 
+                    0, 1,
+                    this.x, this.y,
+                ];
 
-            this.preview(previewGL, ...this.workspace.lastPosition, toolProperties);
-            this.workspace.dirty = true;
-        });
+                this.angle = 0;
+                this.initialAngle = 0;
+                this.undoQueue = [];
+                this.historyPosition = 0;
+
+                gl.clearRect(
+                    selectionMinX,
+                    selectionMinY,
+                    selectionMaxX - selectionMinX,
+                    selectionMaxY - selectionMinY
+                );
+                
+                this.updateHistory();
+
+                this.preview(previewGL, ...this.workspace.lastPosition, toolProperties);
+                this.workspace.dirty = true;
+            });
+        }
     }
 
     deselected(gl, previewGL, toolProperties) {
@@ -93,7 +95,6 @@ artimus.tools.move = class extends artimus.tool {
     }
 
     isInCircle(x, y, cx, cy, radius) { return Math.sqrt(Math.pow(cx - x, 2) + Math.pow(cy - y, 2)) <= radius; }
-
     drawCircle(gl, x, y, radius, fill) {
         gl.beginPath();
         gl.ellipse(x + 0.5, y + 0.5, radius, radius, 0, 0, 2 * Math.PI);
@@ -102,69 +103,158 @@ artimus.tools.move = class extends artimus.tool {
         gl.closePath();
     }
 
+    isInRect(x, y, sx, sy, width, height) { return (x >= sx && y >= sy) && (x <= sx + width && y <= sy + height); }
+    drawRect(gl, x, y, width, height, fill) {
+        gl.strokeRect(x, y, width, height);
+        if (fill) gl.fillRect(x, y, width, height);
+    }
+
+    get rotatePoints() {
+        return [
+            [this.x, this.y],
+            [this.x + this.width, this.y],
+            [this.x + this.width, this.y + this.height],
+            [this.x, this.y + this.height]
+        ]
+    }
+
+    get resizePoints() {
+        //Format, bounding box | X, Y, width, height
+        //        Direction    | DX, DY, TX, TY
+        return [
+            [this.x + (this.width / 3), this.y - 5, this.width / 3, 5,
+            0, -1, 0, this.y + this.height],
+            [this.x + (this.width / 3), (this.y + this.height), this.width / 3, 5,
+            0, 1, 0, this.y],
+            [this.x - 5, this.y + (this.height / 3), 5, this.height / 3,
+            -1, 0, this.x + this.width, 0],
+            [this.x + this.width, this.y + (this.height / 3), 5, this.height / 3,
+            1, 0, this.x, 0]
+        ]
+    }
+
     mouseDown(gl, x, y, toolProperties) {
         if (this.ready) {
             this.dragging = true;
-            this.rotating = false;
+            this.mode = "";
+            this.resizing = false;
+            this.initialSelection = [...this.workspace.selection];
+            this.initialMatrix = [...this.matrix]
+            this.initialWidth = this.width;
+            this.initialHeight = this.height;
 
             //Check to see if we are touching one of the rotation circles, if so rotate it.
-            if (
-                this.isInCircle(x, y, this.x, this.y, 3) ||
-                this.isInCircle(x, y, this.x + this.width, this.y, 3) ||
-                this.isInCircle(x, y, this.x + this.width, this.y + this.height, 3) ||
-                this.isInCircle(x, y, this.x, this.y + this.height, 3)
-            ) {
-                this.rotating = true;
+            for (let i in this.rotatePoints) {
+                if (this.isInCircle(x, y, ...this.rotatePoints[i], 3)) {
+                    this.mode = "rotating";
 
-                this.initialSelection = [...this.workspace.selection];
-                this.cx = this.x + (this.width / 2);
-                this.cy = this.y + (this.height / 2);
-                this.offsetAngle = (this.offsetAngle || 0) - (this.angle || 0);
-                this.initialAngle = Math.atan2(this.cy - y, this.cx - x);
-                this.angle = Math.atan2(this.cy - y, this.cx - x) - this.initialAngle;
+                    this.cx = this.x + (this.width / 2);
+                    this.cy = this.y + (this.height / 2);
+                    this.initialAngle = Math.atan2(this.cy - y, this.cx - x);
+                    this.angle = Math.atan2(this.cy - y, this.cx - x) - this.initialAngle;
+                    return;
+                }
+            }
+
+            //If we fail the rotation check, do the resizing check
+            for (let i in this.resizePoints) {
+                const [rx, ry, rw, rh, dx, dy, cx, cy] = this.resizePoints[i];
+                if (this.isInRect(x, y, rx, ry, rw, rh)) {
+                    this.mode = "resizing";
+
+                    this.cx = cx;
+                    this.cy = cy;
+                    this.dx = dx;
+                    this.dy = dy;
+
+                    this.resizedWidth = this.width;
+                    this.resizedHeight = this.height;
+                    return;
+                }
             }
         }
     }
 
     mouseMove(gl, x, y, vx, vy, toolProperties) {
         if (this.dragging) {
-            if (this.rotating) {
-                //Find offset angle
-                this.angle = Math.atan2(this.cy - y, this.cx - x) - this.initialAngle;
-                if (this.shiftHeld) this.angle = (Math.floor((this.angle / this.tp) * 24) / 24) * this.tp;
-                
-                const sin = Math.sin(-this.angle);
-                const cos = Math.cos(-this.angle);
+            switch (this.mode) {
+                case "resizing":{
+                    //For accurate bounding
+                    this.resizedWidth += vx * this.dx;
+                    this.resizedHeight += vy * this.dy;
 
-                //Move selection points
-                const selection = this.workspace.selection;
-                for (let i = 0; i < this.initialSelection.length; i+=2) {
-                    const x = this.initialSelection[i] - this.cx;
-                    const y = this.initialSelection[i + 1] - this.cy;
+                    const stretchX = (this.resizedWidth / this.initialWidth);
+                    const stretchY = (this.resizedHeight / this.initialHeight);
 
-                    selection[i] = (y * sin + x * cos) + this.cx;
-                    selection[i + 1] = (y * cos - x * sin) + this.cy; 
-                }
+                    this.matrix[0] = this.initialMatrix[0] * stretchX;
+                    this.matrix[1] = this.initialMatrix[1] * stretchX;
+                    this.matrix[2] = this.initialMatrix[2] * stretchY;
+                    this.matrix[3] = this.initialMatrix[3] * stretchY;
 
-                //Update our selection
-                this.workspace.selection = selection;
-                this.updatePositions();
-            }
-            else {
-                //Move the image and the selection pointss
-                this.imageX += vx;
-                this.imageY += vy;
-
-                if (this.workspace.hasSelection) {
                     const selection = this.workspace.selection;
-                    for (let i = 0; i < selection.length; i+=2) {
-                        selection[i] += vx;
-                        selection[i + 1] += vy; 
+
+                    for (let i = 0; i < this.initialSelection.length; i+=2) {
+                        const x = this.initialSelection[i] - this.cx;
+                        const y = this.initialSelection[i + 1] - this.cy;
+
+                        selection[i] = (x * stretchX) + this.cx;
+                        selection[i + 1] = (y * stretchY) + this.cy; 
                     }
 
                     this.workspace.selection = selection;
                     this.updatePositions();
-                }
+                    break;}
+
+                case "rotating":{
+                    //Find offset angle
+                    this.angle = Math.atan2(this.cy - y, this.cx - x) - this.initialAngle;
+                    if (this.shiftHeld) this.angle = (Math.floor((this.angle / this.tp) * 24) / 24) * this.tp;
+                    console.log(this.angle);
+                    
+                    const sin = Math.sin(-this.angle);
+                    const cos = Math.cos(-this.angle);
+
+                    this.matrix[0] = this.initialMatrix[1] * sin + this.initialMatrix[0] * cos;
+                    this.matrix[1] = this.initialMatrix[1] * cos - this.initialMatrix[0] * sin;
+                    this.matrix[2] = this.initialMatrix[3] * sin + this.initialMatrix[2] * cos;
+                    this.matrix[3] = this.initialMatrix[3] * cos - this.initialMatrix[2] * sin;
+
+                    this.matrix[4] = this.initialMatrix[4] - this.cx;
+                    this.matrix[5] = this.initialMatrix[5] - this.cy;
+                    this.matrix[4] = (this.matrix[5] * sin + this.matrix[4] * cos) + this.cx;
+                    this.matrix[5] = (this.matrix[5] * cos - this.matrix[4] * sin) + this.cy;
+
+                    //Move selection points
+                    const selection = this.workspace.selection;
+                    for (let i = 0; i < this.initialSelection.length; i+=2) {
+                        const x = this.initialSelection[i] - this.cx;
+                        const y = this.initialSelection[i + 1] - this.cy;
+
+                        selection[i] = (y * sin + x * cos) + this.cx;
+                        selection[i + 1] = (y * cos - x * sin) + this.cy; 
+                    }
+
+                    //Update our selection
+                    this.workspace.selection = selection;
+                    this.updatePositions();
+                    break;}
+            
+                default:
+                    //Move the image and the selection pointss
+                    this.matrix[4] += vx;
+                    this.matrix[5] += vy;
+
+                    if (this.workspace.hasSelection) {
+                        const selection = this.workspace.selection;
+                        for (let i = 0; i < selection.length; i+=2) {
+                            selection[i] += vx;
+                            selection[i + 1] += vy; 
+                        }
+
+                        this.workspace.selection = selection;
+                        this.updatePositions();
+                    }
+                    break;
             }
         }
     }
@@ -180,7 +270,6 @@ artimus.tools.move = class extends artimus.tool {
         //Undo.
         this.workspace.selection = [...this.undoQueue[this.historyPosition].selection];
         this.angle = this.undoQueue[this.historyPosition].angle;
-        this.offsetAngle = this.undoQueue[this.historyPosition].offsetAngle;
         this.imageX = this.undoQueue[this.historyPosition].imageX;
         this.imageY = this.undoQueue[this.historyPosition].imageY;
         this.imageWidth = this.undoQueue[this.historyPosition].imageWidth;
@@ -211,10 +300,15 @@ artimus.tools.move = class extends artimus.tool {
         gl.fillStyle = getComputedStyle(document.body).getPropertyValue("--artimus-selection-outline");
         gl.lineWidth = 1;
 
-        this.drawCircle(gl, this.x, this.y, 3, this.isInCircle(x, y, this.x, this.y, 3));
-        this.drawCircle(gl, this.x + this.width, this.y, 3, this.isInCircle(x, y, this.x + this.width, this.y, 3));
-        this.drawCircle(gl, this.x + this.width, this.y + this.height, 3, this.isInCircle(x, y, this.x + this.width, this.y + this.height, 3));
-        this.drawCircle(gl, this.x, this.y + this.height, 3, this.isInCircle(x, y, this.x, this.y + this.height, 3));
+        for (let i in this.rotatePoints) {
+            const [px, py] = this.rotatePoints[i];
+            this.drawCircle(gl, px, py, 3, this.isInCircle(x, y, px, py, 3));
+        }
+
+        for (let i in this.resizePoints) {
+            const [rx, ry, rw, rh] = this.resizePoints[i];
+            this.drawRect(gl, rx, ry, rw, rh, this.isInRect(x, y, rx, ry, rw, rh));
+        }
 
         //Create bounding outline
         gl.beginPath();
