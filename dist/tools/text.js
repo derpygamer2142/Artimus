@@ -6,34 +6,39 @@ artimus.tools.text = class extends artimus.tool {
     //Thank you https://stackoverflow.com/a/68372384
     cssFilter = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><filter id="f" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="discrete" tableValues="0 1 1 1 1"/></feComponentTransfer></filter></svg>#f')`;
 
+    deselected(gl, previewGL, toolProperties) {
+        this.renderText(gl, toolProperties);
+        this.workspace.dirty
+    }
+
     mouseDown(gl, x, y, toolProperties) {
         //Comment this until a more reliable way of finding mobile is found, most likely a simple check for touch controls being used last.
         //this.workspace.requestKeyboard();
 
-        toolProperties.x = x;
-        toolProperties.y = y;
+        this.x = x;
+        this.y = y;
 
-        toolProperties.mouseDown = true;
+        this.mouseDown = true;
 
-        if (!toolProperties.typing) {
-            toolProperties.text = "";
-            toolProperties.typing = true;
-            toolProperties.pointerPosition = 0;
+        if (!this.typing) {
+            this.text = "";
+            this.typing = true;
+            this.pointerPosition = 0;
         }
     }
 
     mouseMove(gl, x, y, vx, vy, toolProperties) {
-        if (toolProperties.mouseDown) {
-            toolProperties.x = x;
-            toolProperties.y = y;
+        if (this.mouseDown) {
+            this.x = x;
+            this.y = y;
         }
     }
 
     mouseUp(gl, x, y, toolProperties) {
-        if (toolProperties.mouseDown) {
-            toolProperties.x = x;
-            toolProperties.y = y;
-            toolProperties.mouseDown = false;
+        if (this.mouseDown) {
+            this.x = x;
+            this.y = y;
+            this.mouseDown = false;
         }
     }
 
@@ -48,11 +53,11 @@ artimus.tools.text = class extends artimus.tool {
         if (toolProperties.italic) gl.font = `italic ${gl.font}`;
 
         //Ready the linemen
-        const split = toolProperties.text.split("\n");
+        const split = this.text.split("\n");
         const lineHeight = gl.measureText("■").width * toolProperties.lineSpacing;
 
         //ChAAARRRGEEEE!
-        let y = toolProperties.y;
+        let y = this.y;
         let characterOffset = 0;
 
         if (toolProperties.pixelBrush) gl.filter = this.cssFilter;
@@ -61,7 +66,7 @@ artimus.tools.text = class extends artimus.tool {
             const lineText = split[line];
 
             if (preview) {
-                const relativePointer = toolProperties.pointerPosition - characterOffset;
+                const relativePointer = this.pointerPosition - characterOffset;
                 if (relativePointer >= 0 && relativePointer <= lineText.length) {
                     if (toolProperties.pixelBrush) gl.filter = "none";
 
@@ -69,10 +74,10 @@ artimus.tools.text = class extends artimus.tool {
                     gl.strokeStyle = getComputedStyle(document.body).getPropertyValue("--artimus-eraser-outline");
 
                     const width = gl.measureText(lineText).width;
-                    gl.strokeRect(toolProperties.x, y, width, 1);
+                    gl.strokeRect(this.x, y, width, 1);
 
                     const markerOffset = gl.measureText(lineText.substring(0, relativePointer)).width;
-                    gl.strokeRect(toolProperties.x + markerOffset, y - (lineHeight - 2), 1, lineHeight - 3);
+                    gl.strokeRect(this.x + markerOffset, y - (lineHeight - 2), 1, lineHeight - 3);
 
                     if (toolProperties.pixelBrush) gl.filter = this.cssFilter;
 
@@ -83,9 +88,9 @@ artimus.tools.text = class extends artimus.tool {
             }
 
             if (toolProperties.strokeSize > 0) {
-                gl.strokeText(lineText, toolProperties.x, y);
+                gl.strokeText(lineText, this.x, y);
             }
-            gl.fillText(lineText, toolProperties.x, y);
+            gl.fillText(lineText, this.x, y);
 
             y += lineHeight;
             characterOffset += lineText.length + 1;
@@ -117,30 +122,30 @@ artimus.tools.text = class extends artimus.tool {
     }
 
     keyPressed(gl, event, toolProperties) {
-        if (toolProperties.typing) {
+        if (this.typing) {
             const { key } = event;
-            const text = toolProperties.text;
+            const text = this.text;
 
             if (key.length == 1) {
                 if (key == " ") {
 
                 }
-                toolProperties.text = this.insertCharacterAt(text, toolProperties.pointerPosition, key);
-                toolProperties.pointerPosition++;
+                this.text = this.insertCharacterAt(text, this.pointerPosition, key);
+                this.pointerPosition++;
             }
             else {
                 switch (key.toLowerCase()) {
                     //three basic keys
                     case "enter":
                         if (event.shiftKey) {
-                            toolProperties.text = this.insertCharacterAt(text, toolProperties.pointerPosition, "\n");
-                            toolProperties.pointerPosition++;
+                            this.text = this.insertCharacterAt(text, this.pointerPosition, "\n");
+                            this.pointerPosition++;
                         }
                         else {
                             this.renderText(gl, toolProperties);
 
-                            toolProperties.typing = false;
-                            toolProperties.text = "";
+                            this.typing = false;
+                            this.text = "";
                             
                             this.workspace.dirty = true;
                         }
@@ -148,61 +153,61 @@ artimus.tools.text = class extends artimus.tool {
 
                     case "backspace":
                         //Shift key support for those who don't have delete
-                        if (event.shiftKey) toolProperties.text = this.removeCharactersAt(text, toolProperties.pointerPosition, -1);
+                        if (event.shiftKey) this.text = this.removeCharactersAt(text, this.pointerPosition, -1);
                         else {
-                            toolProperties.text = this.removeCharactersAt(text, toolProperties.pointerPosition, 1);
-                            toolProperties.pointerPosition--;
+                            this.text = this.removeCharactersAt(text, this.pointerPosition, 1);
+                            this.pointerPosition--;
                         }
                         break;
 
                     case "delete":
-                        toolProperties.text = this.removeCharactersAt(text, toolProperties.pointerPosition, -1);
+                        this.text = this.removeCharactersAt(text, this.pointerPosition, -1);
                         break;
 
                     //Tab
                     case "tab":
                         //Allow the use of shift tab to remove tabs
                         if (event.shiftKey) {
-                            if (text.charAt(toolProperties.pointerPosition - 1) == " ") {
+                            if (text.charAt(this.pointerPosition - 1) == " ") {
                                 for (let i = 0; i < 4; i++) {
-                                    toolProperties.text = this.removeCharactersAt(toolProperties.text, toolProperties.pointerPosition, 1);
-                                    toolProperties.pointerPosition--;
-                                    if (toolProperties.text.charAt(toolProperties.pointerPosition - 1) != " ") break;
+                                    this.text = this.removeCharactersAt(this.text, this.pointerPosition, 1);
+                                    this.pointerPosition--;
+                                    if (this.text.charAt(this.pointerPosition - 1) != " ") break;
                                 }
                             }
                         }
                         else {
-                            toolProperties.text = this.insertCharacterAt(text, toolProperties.pointerPosition, "    ");
-                            toolProperties.pointerPosition+=4;
+                            this.text = this.insertCharacterAt(text, this.pointerPosition, "    ");
+                            this.pointerPosition+=4;
                         }
                         break;
 
                     //Pointer controls
                     case "arrowleft":
-                        toolProperties.pointerPosition--;
+                        this.pointerPosition--;
                         break;
 
                     case "arrowright":
-                        toolProperties.pointerPosition++;
+                        this.pointerPosition++;
                         break;
 
                     case "arrowup":
-                        if (text.charAt(toolProperties.pointerPosition - 1) == "\n") toolProperties.pointerPosition--;
-                        else while (text.charAt(toolProperties.pointerPosition - 1) != "\n" && toolProperties.pointerPosition > 0) {
-                            toolProperties.pointerPosition--;
+                        if (text.charAt(this.pointerPosition - 1) == "\n") this.pointerPosition--;
+                        else while (text.charAt(this.pointerPosition - 1) != "\n" && this.pointerPosition > 0) {
+                            this.pointerPosition--;
                         }
                         break;
 
                     case "arrowdown":
-                        if (text.charAt(toolProperties.pointerPosition) == "\n") toolProperties.pointerPosition++;
+                        if (text.charAt(this.pointerPosition) == "\n") this.pointerPosition++;
                         else {
-                            toolProperties.pointerPosition++
+                            this.pointerPosition++
                             while (
-                                text.charAt(toolProperties.pointerPosition - 1) != "\n" 
-                                && toolProperties.pointerPosition < text.length
-                            ) toolProperties.pointerPosition++;
+                                text.charAt(this.pointerPosition - 1) != "\n" 
+                                && this.pointerPosition < text.length
+                            ) this.pointerPosition++;
 
-                            if (toolProperties.pointerPosition != text.length) toolProperties.pointerPosition--;
+                            if (this.pointerPosition != text.length) this.pointerPosition--;
                         }
                         break;
                 
@@ -210,7 +215,7 @@ artimus.tools.text = class extends artimus.tool {
                         break;
                 }
 
-                toolProperties.pointerPosition = Math.min(Math.max(toolProperties.pointerPosition, 0), toolProperties.text.length);
+                this.pointerPosition = Math.min(Math.max(this.pointerPosition, 0), this.text.length);
             }
 
             return true;
@@ -218,7 +223,7 @@ artimus.tools.text = class extends artimus.tool {
     }
 
     preview(gl, x, y, toolProperties) {
-        if (toolProperties.typing) this.renderText(gl, toolProperties, true);
+        if (this.typing) this.renderText(gl, toolProperties, true);
     }
 
     CUGI(artEditor) { return [
