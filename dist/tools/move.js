@@ -17,11 +17,7 @@ artimus.tools.move = class extends artimus.tool {
         if (this.historyPosition < this.undoQueue.length - 1) this.undoQueue.splice(this.historyPosition + 1, this.undoQueue.length);
 
         this.undoQueue.push({
-            angle: this.angle,
-            imageX: this.imageX,
-            imageY: this.imageY,
-            imageWidth: this.imageWidth,
-            imageHeight: this.imageHeight,
+            matrix: [...this.matrix],
             selection: [...this.workspace.selection]
         });
 
@@ -308,11 +304,7 @@ artimus.tools.move = class extends artimus.tool {
     moveToUndo() {
         //Undo.
         this.workspace.selection = [...this.undoQueue[this.historyPosition].selection];
-        this.angle = this.undoQueue[this.historyPosition].angle;
-        this.imageX = this.undoQueue[this.historyPosition].imageX;
-        this.imageY = this.undoQueue[this.historyPosition].imageY;
-        this.imageWidth = this.undoQueue[this.historyPosition].imageWidth;
-        this.imageHeight = this.undoQueue[this.historyPosition].imageHeight;
+        this.matrix = [...this.undoQueue[this.historyPosition].matrix];
 
         this.updatePositions();
     }
