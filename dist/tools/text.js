@@ -7,8 +7,7 @@ artimus.tools.text = class extends artimus.tool {
     cssFilter = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><filter id="f" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="discrete" tableValues="0 1 1 1 1"/></feComponentTransfer></filter></svg>#f')`;
 
     deselected(gl, previewGL, toolProperties) {
-        this.renderText(gl, toolProperties);
-        this.workspace.dirty
+        if (this.typing) this.renderText(gl, toolProperties);
     }
 
     mouseDown(gl, x, y, toolProperties) {
