@@ -2,7 +2,7 @@
   "name": "Artimus",
   "short_name": "Artimus",
 
-  "start_url": ".",
+  "start_url": "../",
   
   "display": "fullscreen",
   "display_override": ["fullscreen", "minimal-ui"],
