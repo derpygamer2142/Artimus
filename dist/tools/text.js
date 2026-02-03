@@ -20,6 +20,9 @@ artimus.tools.text = class extends artimus.tool {
         this.mouseIsDown = true;
 
         if (!this.typing) {
+            this.history = [ "" ];
+            this.historyPosition = 0;
+
             this.text = "";
             this.typing = true;
             this.pointerPosition = 0;
@@ -104,7 +107,7 @@ artimus.tools.text = class extends artimus.tool {
     }
 
     selected(gl, previewGL, toolProperties) {
-        this.history = [];
+        this.history = [ "" ];
     }
 
     insertCharacterAt(text, position, character) {
@@ -127,7 +130,13 @@ artimus.tools.text = class extends artimus.tool {
 
             if (key.length == 1) {
                 if (key == " ") {
+                    if (this.history.length - 1 > this.historyPosition) {
+                        this.history.splice(this.historyPosition + 1, this.history.length);
+                        console.log(this.history);
+                    }
 
+                    this.history.push(this.text);
+                    this.historyPosition = this.history.length - 1;
                 }
                 this.text = this.insertCharacterAt(text, this.pointerPosition, key);
                 this.pointerPosition++;
@@ -220,7 +229,39 @@ artimus.tools.text = class extends artimus.tool {
             return true;
         }
     }
-    
+
+    undo(gl, previewGL, toolProperties) {
+        if (!this.typing) return;
+
+        if (this.historyPosition > 0) {
+            if (this.historyPosition == this.history.length - 1 && 
+                this.history[this.historyPosition] != this.text) this.history.push(this.text);
+
+            console.log(this.history);
+
+            this.historyPosition--;
+            this.text = this.history[this.historyPosition];
+
+            this.preview(previewGL, 0, 0, toolProperties);
+            this.pointerPosition = Math.min(Math.max(this.pointerPosition, 0), this.text.length);
+        }
+
+        return true;
+    }
+
+    redo(gl, previewGL, toolProperties) {
+        if (!this.typing) return;
+
+        if (this.historyPosition < this.history.length - 1) {
+            this.historyPosition++;
+            this.text = this.history[this.historyPosition];
+
+            this.preview(previewGL, 0, 0, toolProperties);
+            this.pointerPosition = Math.min(Math.max(this.pointerPosition, 0), this.text.length);
+        }
+
+        return true;
+    }
 
     preview(gl, x, y, toolProperties) {
         if (this.typing) this.renderText(gl, toolProperties, true);

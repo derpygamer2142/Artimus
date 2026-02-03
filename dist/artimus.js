@@ -794,10 +794,10 @@ window.artimus = {
                     if (event.key.toLowerCase() == "z" && event.ctrlKey) {
                         //Determine undo/redo
                         if (event.shiftKey) {
-                            this.redo();
+                            if (this.redo()) return;
                         }
                         else {
-                            this.undo();
+                            if (this.undo()) return;
                         }
                     }
 
@@ -1509,7 +1509,7 @@ window.artimus = {
         }
 
         undo() {
-            if (this.toolFunction.undo && this.toolFunction.undo(this.gl, this.previewGL, this.toolProperties)) return;
+            if (this.toolFunction.undo && this.toolFunction.undo(this.gl, this.previewGL, this.toolProperties)) return true;
 
             if (this.historyIndex >= this.layerHistory.length - 1) return;
             this.historyIndex++;
@@ -1519,7 +1519,7 @@ window.artimus = {
         }
 
         redo() {
-            if (this.toolFunction.redo && this.toolFunction.redo(this.gl, this.previewGL, this.toolProperties)) return;
+            if (this.toolFunction.redo && this.toolFunction.redo(this.gl, this.previewGL, this.toolProperties)) return true;
 
             if (this.historyIndex <= 0) return;
             this.historyIndex--;
