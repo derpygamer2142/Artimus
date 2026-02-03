@@ -774,8 +774,8 @@ window.artimus = {
                 },
 
                 mouseWheel: (event) => {
+                    event.preventDefault();
                     if (event.ctrlKey) {
-                        event.preventDefault();
                         this.zoom += event.deltaY / -100;
                     }
                     else if (event.shiftKey) {
@@ -844,10 +844,47 @@ window.artimus = {
                 },
 
                 fingerMove: (event) => {
-                    const firstTouch = event.changedTouches[0];
+                    event.preventDefault();
+
+                    let firstTouch = event.changedTouches[0];
                     const touches = Array.from(event.changedTouches);
                     
                     switch ((this.toolFunction) ? this.fingersDown : 0) {
+                        //2 Finger movement.
+                        case 2:{
+                            firstTouch = this.controlSets.touch.touches[0];
+                            const secondTouch = this.controlSets.touch.touches[1];
+
+                            const firstVelocity = [
+                                (firstTouch.obj.clientX - firstTouch.lx),
+                                (firstTouch.obj.clientY - firstTouch.ly)
+                            ]
+
+                            const secondVelocity = [
+                                (secondTouch.obj.clientX - secondTouch.lx),
+                                (secondTouch.obj.clientY - secondTouch.ly)
+                            ]
+
+                            //Get the dot of the movement;
+                            const moveDot = (secondVelocity[0] * firstVelocity[0]) + (secondVelocity[1] * firstVelocity[1]);
+
+                            if (moveDot < 0) {
+                                //Get change in distance for zooming, maybe rotation sometime in the future
+                                const lastDist = Math.sqrt(Math.pow(secondTouch.lx - firstTouch.lx, 2) + Math.pow(secondTouch.ly - firstTouch.ly, 2))
+                                const newDist = Math.sqrt(Math.pow(secondTouch.obj.clientX - firstTouch.obj.clientX, 2) + Math.pow(secondTouch.obj.clientY - firstTouch.obj.clientY, 2))
+                            
+                                // (change) / ((MinorAxis) / 2.5)
+                                const zoomAmnt = (newDist - lastDist) / (((window.innerWidth < window.innerHeight) ? window.innerWidth : window.innerHeight) / 2.5);
+                            
+                                this.zoom += zoomAmnt;
+                            }
+                            else {
+                                this.scrollX += (firstVelocity[0] + secondVelocity[0]) * (this.invZoom / this.fingersDown);
+                                this.scrollY += (firstVelocity[1] + secondVelocity[1]) * (this.invZoom / this.fingersDown);
+                            }
+
+                            break;}
+
                         //Panning
                         default:
                             for (let touchID in touches) {
@@ -893,10 +930,10 @@ window.artimus = {
                         
                         this.controlSets.touch.touches[touch.identifier] = {
                             lx: touch.clientX,
-                            ly: touch.clientY
+                            ly: touch.clientY,
+                            obj: touch
                         }
                     }
-                    event.preventDefault();
                 },
 
                 fingerUp: (event) => {
