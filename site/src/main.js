@@ -92,15 +92,6 @@ window.editor = {
     }
 };
 
-fetch("lang/english.json").then(result => result.text()).then(text => {
-    //Parse the language file.
-    editor.language = JSON.parse(text);
-
-    editor.workspace = artimus.inject(document.getElementById("workspace-area"));
-    editor.workspace.resize(0, 0);
-    artimus.globalRefreshTools();
-});
-
 editor.fileResize = (newFile) => {
     //Simple, easy.
     const modal = new editor.modal((newFile) ? "New File" : "Resize", [
@@ -139,7 +130,11 @@ artimus.layerPropertyMenu = (workspace, layer) => {
     ], { height: 30 });
 }
 
-artimus.translate = (item, context) => (editor.language[`artimus.${context}.${item}`] || `artimus.${context}.${item}`);
+artimus.translate = (item, context) => {
+    const translated = (editor.language[`artimus.${context}.${item}`] || `artimus.${context}.${item}`);
+    if (Array.isArray(translated)) return translated.join("\n");
+    return translated;
+}
 
 artimus.fontPopup = (workspace) => {
     return new Promise((resolve) => {
@@ -173,3 +168,15 @@ artimus.fontPopup = (workspace) => {
         })
     })
 }
+
+fetch("lang/english.json").then(result => result.text()).then(text => {
+    //Parse the language file.
+    editor.language = JSON.parse(text);
+
+    editor.workspace = artimus.inject(document.getElementById("workspace-area"));
+    editor.workspace.resize(0, 0);
+    artimus.globalRefreshTools();
+
+
+    new editor.modal(artimus.translate("welcome.title", "modal"), artimus.translate("welcome.info", "modal"), { height: 50, hasClose: false });
+});
