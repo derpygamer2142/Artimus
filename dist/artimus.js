@@ -850,7 +850,6 @@ window.artimus = {
 
                     let firstTouch = event.changedTouches[0];
                     const touches = Array.from(event.changedTouches);
-                    console.log(event.touches, event);
                     
                     switch ((this.toolFunction) ? this.fingersDown : 0) {
                         //2 Finger movement.
@@ -976,7 +975,9 @@ window.artimus = {
                         if (this.controlSets.touch.hadMoved) this.controlSets.touch.hadMoved = false;
                     }
                 },
+            },
 
+            pen: {
                 //Experimental S-Pen support, unsure about other stylus devices.
                 penMove: (event) => {
                     //Mostly air action here.
@@ -986,6 +987,20 @@ window.artimus = {
                             //For previews
                             this.previewGL.clearRect(0, 0, this.width, this.height);
                             this.toolFunction.preview(this.previewGL, ...position, this.toolProperties);
+                        }
+
+                        if (event.buttons == 1) {
+                            if (event.target != this.canvas) return;
+                            const [red, green, blue, alpha] = this.GL.getImageData(...this.getCanvasPosition(event.clientX, event.clientY, true), 1, 1).data;
+                            const converted = artimus.RGBtoHex({ r:red, g:green, b:blue, a:alpha });
+
+                            //The three typical colours
+                            this.toolProperties.strokeColor = converted;
+                            this.toolProperties.fillColor = converted;
+                            this.toolProperties.color = converted;
+
+                            //Refresh options
+                            this.refreshToolOptions();
                         }
                     }
                 }
@@ -1015,7 +1030,8 @@ window.artimus = {
             this.canvasArea.addEventListener("touchstart", this.controlSets.touch.fingerDown);
             this.canvasArea.addEventListener("touchmove", this.controlSets.touch.fingerMove);
             this.canvasArea.addEventListener("touchend", this.controlSets.touch.fingerUp);
-            this.canvasArea.addEventListener("pointermove", this.controlSets.touch.penMove);
+
+            this.canvasArea.addEventListener("pointermove", this.controlSets.pen.penMove);
         }
 
         refreshTranslation() {
