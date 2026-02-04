@@ -103,13 +103,13 @@ fetch("lang/english.json").then(result => result.text()).then(text => {
 
 editor.fileResize = (newFile) => {
     //Simple, easy.
-    new editor.modal((newFile) ? "New File" : "Resize", [
+    const modal = new editor.modal((newFile) ? "New File" : "Resize", [
         { type: "int", text: "width", key: "width", target: editor.docEdit},
         { type: "int", text: "height", key: "height", target: editor.docEdit},
         { type: "button", text: (newFile) ? "create" : "resize", onclick: () => {
             if (newFile) artimus.activeWorkspaces[0].new(editor.docEdit.width, editor.docEdit.height);
             else artimus.activeWorkspaces[0].resize(editor.docEdit.width, editor.docEdit.height);
-            this.close();
+            modal.close();
         }}
     ]);
 }
