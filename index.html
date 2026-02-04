@@ -91,7 +91,7 @@
     <script src="site/src/settings.js"></script>
     <script>
 
-        editor.openModal("Welcome to Artimus", `
+        new editor.modal("Welcome to Artimus", `
                 <img src="site/Logo_NoGraffiti.png" class="LOGO"></img>
 
                 <p>A web based art editor and library created by ObviousStudios and open sourced under the MIT liscense</p>
@@ -104,7 +104,7 @@
                 <p>If you are fine with this and want to try this web demo click the "I'm ready!" button below!</p>
                 
                 <button class="artimus-button" onclick="editor.workspace.new(640, 480); editor.closeModal();">I'm ready!</button>
-        `)
+        `, { height: 50 });
     </script>
 </body>
 </html>

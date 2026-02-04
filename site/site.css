@@ -85,7 +85,7 @@ cugi-dropdown:active {
     height: calc(var(--mult-size) * var(--window-height));
 }
 
-.popup #popupContent {
+.popup .popup-content {
     text-align: center;
     font-family: monospace;
 }
