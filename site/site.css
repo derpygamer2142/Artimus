@@ -1,6 +1,21 @@
-body {
-    --modal-interaction: all;
-    --modal-opacity: 0%;
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { 
+    background: var(--artimus-background-2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--artimus-icon);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--artimus-button-selected); }
+
+/* If the browser doesn't support the cool psuedo-element, use the standard */
+@supports not selector(::-webkit-scrollbar) {
+    body {
+        scrollbar-color: var(--artimus-icon) var(--artimus-background-2);
+        scrollbar-width: thin;
+    }
 }
 
 .main-grid {
@@ -59,9 +74,6 @@ cugi-dropdown:active {
 
     background-color: #00000055;
 
-    pointer-events: var(--modal-interaction);
-    opacity: var(--modal-opacity);
-
     transition: 250ms opacity;
 }
 
@@ -83,12 +95,26 @@ cugi-dropdown:active {
     --mult-size: max(1vw, 8px);
     width: calc(var(--mult-size) * var(--window-width));
     height: calc(var(--mult-size) * var(--window-height));
+
+    display: flex;
+    flex-direction: column;
 }
 
 .popup .popup-content {
     text-align: center;
     font-family: monospace;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100%;
 }
+
+.popup-content > h1 { margin: 10px; }
+.popup-content > h2 { margin: 10px; }
+.popup-content > h3 { margin: 10px; }
+.popup-content > h4 { margin: 10px; }
+.popup-content > h5 { margin: 10px; }
+.popup-content > p { margin: 10px; }
 
 .popup .CUGI-PropertyHolder {
     display: flex;
@@ -143,6 +169,11 @@ cugi-dropdown:active {
     image-rendering: pixelated;
     /* Weird chromium Win-11 bug */
     filter: blur(0);
+
+    width: 90%;
+    margin: 5%;
+    margin-bottom: 0%;
+    margin-top: 1%;
 }
 
 .popup-close {

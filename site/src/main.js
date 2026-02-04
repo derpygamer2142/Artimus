@@ -9,6 +9,7 @@ window.editor = {
 
     language: {},
 
+    modals: [],
     modal: class {
         constructor(name, contents, options) {
             options = Object.assign({
@@ -66,15 +67,26 @@ window.editor = {
             switch (typeof contents) {
                 case "function": contents(this.content, this); break;
                 case "string": this.content.innerHTML = contents; break;
-                case "object": this.content.appendChild(contents); break;
+                case "object": this.content.appendChild(CUGI.createList(contents)); break;
 
                 default:
                     break;
             }
+
+            editor.modals.push(this);
+
+            this.init(name, contents, options);
         }
+
+        init() {}
         
         close() {
             this.background.parentElement.removeChild(this.background);
+
+            //Remove from global modals list.
+            const index = editor.modals.indexOf(this);
+            if (index > -1) editor.modals.splice(index, 1);
+
             delete this;
         }
     }
@@ -87,58 +99,23 @@ fetch("lang/english.json").then(result => result.text()).then(text => {
     editor.workspace = artimus.inject(document.getElementById("workspace-area"));
     editor.workspace.resize(0, 0);
     artimus.globalRefreshTools();
-})
-
-editor.openModal = (name, contents, hasClose) => {
-    hasClose = hasClose == true;
-
-    editor.popup.innerHTML = "";
-    switch (typeof contents) {
-        case "function": contents(editor.popup); break;
-        case "string": editor.popup.innerHTML = contents; break;
-        case "object": editor.popup.appendChild(CUGI.createList(contents)); break;
-    
-        default:
-            break;
-    }
-
-    document.body.style.setProperty("--modal-interaction", "all");
-    document.body.style.setProperty("--modal-opacity", "100%");
-
-    editor.popupTitle.innerText = name || "popup";
-}
-
-editor.closeModal = () => {
-    document.body.style.setProperty("--modal-interaction", "none");
-    document.body.style.setProperty("--modal-opacity", "0%");
-}
+});
 
 editor.fileResize = (newFile) => {
-    editor.docEdit = {
-        width: 256,
-        height: 240
-    };
-
-    editor.popup.innerHTML = "";
-    editor.popup.appendChild(CUGI.createList([
-        { type: "header", text: (newFile) ? "New File" : "Resize" },
+    //Simple, easy.
+    new editor.modal((newFile) ? "New File" : "Resize", [
         { type: "int", text: "width", key: "width", target: editor.docEdit},
         { type: "int", text: "height", key: "height", target: editor.docEdit},
         { type: "button", text: (newFile) ? "create" : "resize", onclick: () => {
             if (newFile) artimus.activeWorkspaces[0].new(editor.docEdit.width, editor.docEdit.height);
             else artimus.activeWorkspaces[0].resize(editor.docEdit.width, editor.docEdit.height);
-            editor.closeModal();
+            this.close();
         }}
-    ]));
-
-    document.body.style.setProperty("--modal-interaction", "all");
-    document.body.style.setProperty("--modal-opacity", "100%");
+    ]);
 }
 
 artimus.layerPropertyMenu = (workspace, layer) => {
-    editor.popup.innerHTML = "";
-    editor.popup.appendChild(CUGI.createList([
-        { type: "header", text: layer.name },
+    new editor.modal(`Editing "${layer.name}"`, [
         { type: "dropdown", target: layer, key: "blendMode", items: [
             { text: "Default", value: "source-over"},
             { text: "additive", value: "lighter"},
@@ -158,12 +135,8 @@ artimus.layerPropertyMenu = (workspace, layer) => {
 
             { text: "soft-light", value: "soft-light"},
             { text: "hard-light", value: "hard-light"},
-        ]},
-        { type: "button", text: "ok", onclick: () => editor.closeModal() }
-    ]));
-
-    document.body.style.setProperty("--modal-interaction", "all");
-    document.body.style.setProperty("--modal-opacity", "100%");
+        ]}
+    ], { height: 30 });
 }
 
 artimus.translate = (item, context) => (editor.language[`artimus.${context}.${item}`] || `artimus.${context}.${item}`);
@@ -171,7 +144,7 @@ artimus.translate = (item, context) => (editor.language[`artimus.${context}.${it
 artimus.fontPopup = (workspace) => {
     return new Promise((resolve) => {
         workspace.getFonts().then(fonts => {
-            editor.openModal("Choose a font", (popup) => {
+            new editor.modal("Choose a font", (popup, modal) => {
                 const innerList = document.createElement("div");
                 let fontSet = new Set();
                 innerList.className = "artimus-font-list"
@@ -188,7 +161,7 @@ artimus.fontPopup = (workspace) => {
 
                         button.onclick = () => {
                             resolve(fonts[fontID].family);
-                            editor.closeModal();
+                            modal.close();
                         }
 
                         innerList.appendChild(button);
@@ -196,7 +169,7 @@ artimus.fontPopup = (workspace) => {
                 }
 
                 popup.appendChild(innerList);
-            })
+            }, { height: 25.5 })
         })
     })
 }

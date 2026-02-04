@@ -40,14 +40,5 @@ if (localStorage.getItem("settings")) {
 }
 
 editor.settingsPage = () => {
-    editor.docEdit = {
-        width: 256,
-        height: 240
-    };
-
-    editor.popup.innerHTML = "";
-    editor.popup.appendChild(CUGI.createList(editor.settingDefs.general));
-
-    document.body.style.setProperty("--modal-interaction", "all");
-    document.body.style.setProperty("--modal-opacity", "100%");
+    new editor.modal("Settings", editor.settingDefs.general);
 }
