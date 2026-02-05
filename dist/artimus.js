@@ -1,7 +1,9 @@
 window.artimus = {
     tools: {},
     maxHistory: 10,
+
     windRule: "evenodd",
+    pickType: "layer",
 
     //I probably need to make a better solution for replacing and modifying these? Maybe some build script?
     defaultArrow: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="67.79628" height="19.99114" viewBox="0,0,67.79628,19.99114"><g transform="translate(-206.10043,-170.79353)"><g fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-miterlimit="10"><path d="M272.39671,189.28467c-0.45144,-8.7306 -24.09936,-17.06276 -32.46692,-16.99068c-7.9521,0.06851 -31.96292,7.81916 -32.32935,16.92539c-0.00186,0.04618 16.25066,-3.22684 32.24773,-3.1737c16.40198,0.05449 32.55854,3.43226 32.54855,3.23898z" /></g></g></svg>`,
@@ -170,11 +172,11 @@ window.artimus = {
         }
 
         properties = {};
+        colorProperties = [ "strokeColor", "fillColor", "color" ];
         constructive = true;
     },
     
     layer: class {
-
         blendMode = "source-over";
         bitmap = null;
         visibility = true;
@@ -686,6 +688,15 @@ window.artimus = {
             this.updatePosition();
         }
 
+        pickColorAt(x, y) {
+            let red = 255; let green = 255; let blue = 255; let alpha = 255;
+
+            if (artimus.pickType == "composite") [red, green, blue, alpha] = this.compositeGL.getImageData(...this.getCanvasPosition(x, y, true), 1, 1).data;
+            else [red, green, blue, alpha] = this.GL.getImageData(...this.getCanvasPosition(x, y, true), 1, 1).data;
+            const converted = artimus.RGBtoHex({ r:red, g:green, b:blue, a:alpha });
+            return converted;
+        }
+
         //Control stuffs
         fingersDown = 0;
         panning = false;
@@ -701,13 +712,13 @@ window.artimus = {
 
                         case 2:
                             if (event.target != this.canvas) return;
-                            const [red, green, blue, alpha] = this.GL.getImageData(...this.getCanvasPosition(event.clientX, event.clientY, true), 1, 1).data;
-                            const converted = artimus.RGBtoHex({ r:red, g:green, b:blue, a:alpha });
+                            const color = this.pickColorAt(event.clientX, event.clientY);
 
+                            console.log(color, this.toolFunction.colorProperties);
                             //The three typical colours
-                            this.toolProperties.strokeColor = converted;
-                            this.toolProperties.fillColor = converted;
-                            this.toolProperties.color = converted;
+                            for (let key in this.toolFunction.colorProperties) {
+                                this.toolProperties[this.toolFunction.colorProperties[key]] = color;
+                            }
 
                             //Refresh options
                             this.refreshToolOptions();
