@@ -89,6 +89,8 @@ artimus.tools.curve = class extends artimus.tools.line {
         { target: artEditor.toolProperties, key: "pixelBrush", type: "boolean" },
     ]}
 
+    colorProperties = [ "strokeColor" ];
+
     properties = {
         strokeColor: "#000000",
         strokeSize: 2,

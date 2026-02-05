@@ -172,7 +172,7 @@ window.artimus = {
         }
 
         properties = {};
-        colorProperties = [ "strokeColor", "fillColor", "color" ];
+        colorProperties = [];
         constructive = true;
     },
     

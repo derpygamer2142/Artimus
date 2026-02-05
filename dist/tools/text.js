@@ -281,6 +281,8 @@ artimus.tools.text = class extends artimus.tool {
         { target: artEditor.toolProperties, key: "pixelBrush", type: "boolean" },
     ]}
 
+    colorProperties = [ "strokeColor", "fillColor" ];
+
     properties = {
         font: "Monospace",
         bold: false,

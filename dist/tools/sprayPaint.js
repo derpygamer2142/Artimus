@@ -38,6 +38,8 @@ artimus.tools.sprayPaint = class extends artimus.tool {
         { target: artEditor.toolProperties, key: "points", type: "int", min: 1 },
     ]}
 
+    colorProperties = [ "color" ];
+
     properties = {
         color: "#ff0000",
         radius: 10,

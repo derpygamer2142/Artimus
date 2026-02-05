@@ -47,6 +47,8 @@ artimus.tools.rectangle = class extends artimus.tool {
         { target: artEditor.toolProperties, key: "cornerRounding", type: "int", min: 0 },
     ]}
 
+    colorProperties = [ "strokeColor", "fillColor" ];
+
     properties = {
         fillColor: "#ff0000",
         strokeColor: "#000000",

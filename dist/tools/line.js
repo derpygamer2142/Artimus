@@ -54,6 +54,8 @@ artimus.tools.line = class extends artimus.tool {
         { target: artEditor.toolProperties, key: "pixelBrush", type: "boolean" },
     ]}
 
+    colorProperties = [ "strokeColor" ];
+
     properties = {
         strokeColor: "#000000",
         strokeSize: 2,

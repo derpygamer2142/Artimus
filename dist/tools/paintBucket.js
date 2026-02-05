@@ -91,6 +91,8 @@ artimus.tools.paintBucket = class extends artimus.tool {
         { target: artEditor.toolProperties, key: "pierceTransparency", type: "boolean" },
     ]}
 
+    colorProperties = [ "fillColor" ];
+
     properties = {
         fillColor: "#000000",
         respectTransparency: true,
