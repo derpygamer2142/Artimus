@@ -9,6 +9,10 @@ window.artimus = {
     defaultArrow: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="67.79628" height="19.99114" viewBox="0,0,67.79628,19.99114"><g transform="translate(-206.10043,-170.79353)"><g fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-miterlimit="10"><path d="M272.39671,189.28467c-0.45144,-8.7306 -24.09936,-17.06276 -32.46692,-16.99068c-7.9521,0.06851 -31.96292,7.81916 -32.32935,16.92539c-0.00186,0.04618 16.25066,-3.22684 32.24773,-3.1737c16.40198,0.05449 32.55854,3.43226 32.54855,3.23898z" /></g></g></svg>`,
     hideIcon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="58" height="58" viewBox="0,0,58,58"><g transform="translate(-211,-151)"><g stroke-miterlimit="10"><path d="M264.91616,181.7c4.38014,-2.9052 -6.38446,-0.74738 -11.43352,-3.76823c-5.30721,-3.1753 -9.39066,-8.63177 -13.65934,-8.63177c-4.09095,0 -13.12294,0.85076 -18.29409,3.81852c-5.61379,3.2218 -8.36188,5.26545 -7.21305,8.58148c2.92024,8.42912 16.07033,9 24.10714,9c8.76638,0 17.33691,-2.92717 26.49286,-9z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M250.4,180c0,-2.33846 -2.78686,-4.29491 -4.11265,-6.02382c-1.89933,-2.47682 -2.90475,-4.27618 -6.28735,-4.27618c-5.74376,0 -10.4,4.61147 -10.4,10.3c0,5.68853 4.65624,10.3 10.4,10.3c5.74376,0 10.4,-4.61147 10.4,-10.3z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="butt"/><path d="M211,209v-58h58v58z" fill="none" stroke="none" stroke-width="0" stroke-linecap="butt"/></g></g></svg>`,
 
+    toolIcon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="70.5" height="70.5" viewBox="0,0,70.5,70.5"> <g transform="translate(-204.75002,-144.75)">    <g data-paper-data="{&quot;isPaintingLayer&quot;:true}" fill-rule="nonzero" stroke="none" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" style="mix-blend-mode: normal">        <path d="M204.75003,215.25v-70.5h70.5v70.5z" fill="none" stroke-width="0"/>        <path d="M220.9868,205.17696c1.77179,-0.89842 3.45323,-2.83003 3.92284,-4.18449c0.48941,-2.20805 2.09187,-5.70927 4.03585,-6.94886c1.41138,-1.79045 6.7982,-2.72387 8.25105,-0.51354c3.63129,2.41038 4.42564,4.90457 4.65906,6.97496c0.87449,2.30301 -2.19833,6.25534 -4.02505,7.55363c-2.70649,1.77061 -6.09868,1.76254 -9.25182,2.13584c-3.36677,0.39859 -5.03047,-0.4888 -7.98273,-1.41774c-0.53432,-0.4212 -3.55958,-2.15572 -3.34232,-2.965c0.23096,-0.8603 2.73102,-0.52502 3.38089,-0.60196l0.28441,-0.03367c0,0 0.02808,-0.00332 0.06782,0.00082z" fill="currentColor" stroke-width="0.5"/>        <path d="M254.7307,185.57527c-5.41655,12.21861 -8.83657,10.44178 -13.17454,8.51874c-4.33797,-1.92303 -7.95119,-3.26405 -2.53464,-15.48266c5.41655,-12.21861 17.81172,-30.68787 22.14969,-28.76483c4.33797,1.92304 -1.02396,23.51014 -6.4405,35.72876z" fill="currentColor" stroke-width="0"/></g></g></svg><!--rotationCenter:35.249975000000006:35.25000499999999-->`,
+    propertiesIcon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="70.5" height="70.5" viewBox="0,0,70.5,70.5"><g transform="translate(-204.75001,-144.75)"><g stroke="none" stroke-width="0" stroke-miterlimit="10"><path d="M204.75001,215.25v-70.5h70.5v70.5z" fill="none"/><path d="M220.30727,180c0,-10.876 8.81673,-19.69273 19.69274,-19.69273c10.876,0 19.69274,8.81673 19.69274,19.69274c0,10.876 -8.81674,19.69274 -19.69274,19.69274c-10.876,0 -19.69273,-8.81673 -19.69273,-19.69273zM239.5721,191.93641c6.2132,0 11.25,-5.0368 11.25,-11.25c0,-6.2132 -5.0368,-11.25 -11.25,-11.25c-6.2132,0 -11.25,5.0368 -11.25,11.25c0,6.2132 5.0368,11.25 11.25,11.25z" fill="currentColor"/><path d="M266.32682,174.76257v10.47486h-16.46326c0.61623,-1.39146 0.95854,-2.93126 0.95854,-4.55102c0,-2.1737 -0.61649,-4.20342 -1.68416,-5.92384z" fill="currentColor"/><path d="M213.67319,185.23743v-10.47486h16.33307c-1.06767,1.72042 -1.68416,3.75014 -1.68416,5.92384c0,1.61976 0.34231,3.15956 0.95854,4.55102z" fill="currentColor"/><path d="M254.91245,157.68071l7.40684,7.40684l-12.06382,12.06382c-1.15757,-3.50021 -3.98726,-6.23919 -7.54291,-7.27077z" fill="currentColor"/><path d="M225.08755,202.31929l-7.40684,-7.40684l11.08557,-11.08557c1.03158,3.55565 3.77056,6.38534 7.27077,7.54291z" fill="currentColor"/><path d="M234.76257,153.67319h10.47486l0,17.29172c-1.66381,-0.9717 -3.59955,-1.52849 -5.66533,-1.52849c-1.72074,0 -3.35125,0.38633 -4.80953,1.07698z" fill="currentColor"/><path d="M245.23743,206.32681h-10.47486l0,-15.46738c1.45828,0.69065 3.08879,1.07698 4.80953,1.07698c2.06579,0 4.00153,-0.55679 5.66533,-1.52849z" fill="currentColor"/><path d="M217.68071,165.08756l7.40684,-7.40684l12.0253,12.0253c-3.65263,0.81448 -6.63562,3.40493 -7.99565,6.81804z" fill="currentColor"/><path d="M262.31929,194.91244l-7.40684,7.40684l-11.17799,-11.17799c3.4131,-1.36003 6.00356,-4.34302 6.81804,-7.99565z" fill="currentColor"/></g></g></svg>`,
+    layerIcon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="66.48045" height="66.48045" viewBox="0,0,66.48045,66.48045"><g transform="translate(-206.75978,-146.75978)"><g stroke-miterlimit="10"><path d="M213.21429,179.5871h53.57143" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M213.21429,167.4753h3.35793" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M233.91977,167.4753h8.04121" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M260.59712,167.4753h6.18859" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M213.21429,191.38834h29.85166" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M258.87232,191.38834h7.91339" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><g><path d="M225.22727,172.35537v-9.60744" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M219.33884,164.71074l5.88843,-10.02066l5.88843,10.02066z" fill="currentColor" stroke="none" stroke-width="0" stroke-linecap="butt"/></g><g><path d="M250.95041,187.64463v9.60744" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M256.83884,195.28926l-5.88843,10.02066l-5.88843,-10.02066z" fill="currentColor" stroke="none" stroke-width="0" stroke-linecap="butt"/></g><path d="M206.75978,213.24022v-66.48045h66.48045v66.48045z" fill="none" stroke="none" stroke-width="0" stroke-linecap="butt"/></g></g></svg>`,
+
     degreeToRad: (deg) => (deg * (3.1415962 / 180)),
     radToDegree: (rad) => (rad * (180 / 3.1415962)),
 
@@ -345,6 +349,21 @@ window.artimus = {
             return this.#currentLayer;
         }
 
+        _toolbarTab = 0;
+        set toolbarTab(value) {
+            this.quickVar(this.toolbar, {
+                "tab-1": 0,
+                "tab-2": 0,
+                "tab-3": 0,
+            });
+
+            this.toolbar.style.setProperty(`--tab-${value + 1}`, 1);
+            this._toolbarTab = value;
+        }
+        get toolbarTab() {
+            return this._toolbarTab;
+        }
+
         //History
         layerHistory = [];
         historyIndex = 0;
@@ -634,6 +653,15 @@ window.artimus = {
             this.layerCreationButton = document.createElement("button");
             this.layerCreationButton.innerText = "✓";
 
+            this.toolbarTabs = document.createElement("div");
+            this.toolTab = document.createElement("button");
+            this.propertyTab = document.createElement("button");
+            this.layerTab = document.createElement("button");
+
+            this.toolTab.appendChild(artimus.elementFromString(artimus.toolIcon));
+            this.propertyTab.appendChild(artimus.elementFromString(artimus.propertiesIcon));
+            this.layerTab.appendChild(artimus.elementFromString(artimus.layerIcon));
+
             this.canvasArea = document.createElement("div");
             this.canvas = document.createElement("canvas");
             
@@ -655,6 +683,17 @@ window.artimus = {
             this.layerCreationName.className = "artimus-layerCreationName";
             this.layerCreationButton.className = "artimus-button artimus-layerCreationButton";
 
+            this.toolbarTabs.className = "artimus-toolbarTabs";
+
+            this.toolTab.className = "artimus-button artimus-toolbarTab";
+            this.toolTab.children[0].classList = "artimus-toolIcon artimus-tabIcon"
+
+            this.propertyTab.className = "artimus-button artimus-toolbarTab";
+            this.propertyTab.children[0].classList = "artimus-toolIcon artimus-tabIcon"
+
+            this.layerTab.className = "artimus-button artimus-toolbarTab";
+            this.layerTab.children[0].classList = "artimus-toolIcon artimus-tabIcon"
+
             this.canvasArea.className = "artimus-canvasArea";
             this.canvas.className = "artimus-canvas";
             
@@ -667,6 +706,11 @@ window.artimus = {
             this.layerHolder.appendChild(this.layerCreationHolder);
             this.layerCreationHolder.appendChild(this.layerCreationName);
             this.layerCreationHolder.appendChild(this.layerCreationButton);
+
+            this.container.appendChild(this.toolbarTabs);
+            this.toolbarTabs.appendChild(this.toolTab);
+            this.toolbarTabs.appendChild(this.propertyTab);
+            this.toolbarTabs.appendChild(this.layerTab);
 
             this.container.appendChild(this.canvasArea);
             this.canvasArea.appendChild(this.canvas);
@@ -684,6 +728,10 @@ window.artimus = {
                     this.layerCreationName.value = "";
                 }
             }
+
+            this.toolTab.onclick = () => { this.toolbarTab = 0; }
+            this.propertyTab.onclick = () => { this.toolbarTab = 1; }
+            this.layerTab.onclick = () => { this.toolbarTab = 2; }
 
             this.updatePosition();
         }
