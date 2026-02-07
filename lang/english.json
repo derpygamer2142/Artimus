@@ -66,6 +66,8 @@
 
     "artimus.modal.layerProperty.title": "Editing \"[LAYER]\"",
     "artimus.modal.layerProperty.blendMode": "Blend Mode",
+    "artimus.modal.layerProperty.transparency": "Transparency",
+    "artimus.modal.layerProperty.done": "Done",
 
     "artimus.modal.newFile.title": "New File",
     "artimus.modal.newFile.create": "Create!",

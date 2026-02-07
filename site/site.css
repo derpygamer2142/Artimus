@@ -400,3 +400,23 @@ cugi-dropdown:active {
     border-radius: 100%;
     transition: var(--speed) left, var(--speed) top;
 }
+
+.layerProperties-BMTHolder {
+    display: grid;
+    margin: 4px;
+    grid-template-columns: 30% 20% 50%;
+}
+
+.popup-layerProperties {
+    padding: 4px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.layerProperties-doneButtonHolder {
+    flex-grow:1;
+    display: flex;
+    justify-content: center;
+    align-items: end;
+}

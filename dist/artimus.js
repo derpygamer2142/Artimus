@@ -194,6 +194,7 @@ window.artimus = {
     
     layer: class {
         blendMode = "source-over";
+        alpha = 1;
         bitmap = null;
         visibility = true;
 
@@ -259,6 +260,18 @@ window.artimus = {
 
             if (this.bitmap) this.bitmap.close();
             delete this;
+        }
+
+        rename(name) {
+            if (name == this.name) return;
+
+            //Check for any other layers named this.
+            const nameAvailable = this.workspace.layers.findIndex((layer) => layer.name == name) == -1;
+            if (nameAvailable) {
+                this.name = name;
+                if (this.element) this.element.targetLayer = name;
+                if (this.label) this.label.innerText = name;
+            }
         }
 
         resize(active, anchor, width, height, editingData) {
@@ -644,13 +657,14 @@ window.artimus = {
             }
         }
 
-        renderComposite(final) {
+        renderComposite() {
             this.compositeGL.clearRect(0, 0, this.width, this.height);
             for (let layerID in this.layers) {
                 const layer = this.layers[layerID];
                 this.compositeGL.globalCompositeOperation = layer.blendMode || "source-over";
 
                 if (layer.visibility) {
+                    this.compositeGL.globalAlpha = layer.alpha;
                     if (layerID == this.currentLayer) this.compositeGL.drawImage(this.editingCanvas, 0, 0);
                     else {
                         const bitmap = layer.bitmap;
@@ -658,6 +672,7 @@ window.artimus = {
                     }
                 }
             }
+            this.compositeGL.globalAlpha = 1;
         }
 
         createLayout() {
@@ -1586,6 +1601,17 @@ window.artimus = {
             to.label = from.label;
         }
 
+        renameLayer(ID, name) {
+            if (typeof ID == "string") {
+                const locID = this.layers.findIndex((layer) => layer.name == ID);
+                if (locID != -1) ID = locID;
+            }
+
+            if (typeof ID == "number") {
+                this.layers[ID].rename(name);
+            }
+        }
+
         resizeLayer(ID, anchor, width, height, editingData) {
             if (typeof ID == "string") {
                 const locID = this.layers.findIndex((layer) => layer.name == ID);
@@ -2059,7 +2085,7 @@ window.artimus = {
 
                 return index;
             },
-            //Format v2
+            //Format v3
             (data, layer, bytesPerLayer, index) => {
                 //Decode name and blend mode
                 const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
@@ -2087,6 +2113,43 @@ window.artimus = {
                 //Set layer data
                 this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
                 this.layers[layer + 1].blendMode = blendMode;
+
+                this.updateLayer(layer + 1);
+                this.setLayerVisibility(layer + 1, visibility);
+
+                return index;
+            },
+
+            //Format v4
+            (data, layer, bytesPerLayer, index) => {
+                //Decode name and blend mode
+                const nameLength = (data[index + 1] << 16) + (data[index + 2] << 8) + (data[index + 3]);
+                const encodingMode = data[index + 4];
+                const visibility = data[index + 5] == 1;
+                const blendMode = artimus.blendModes[data[index + 6]];
+                const alpha = data[index + 7] / 255;
+                index += 7;
+
+                //Extract name bytes and decode
+                let name = [];
+                for (let i = 0; i < nameLength; i++) {
+                    name.push(data[index + i + 1]);
+                }
+
+                index += name.length;
+                name = this.tDecoder.decode(new Uint8Array(name));
+
+                //Parse the image now
+                let imageData = new Uint8ClampedArray(bytesPerLayer);
+                
+                index = this.decodingModes[encodingMode](data, imageData, index, bytesPerLayer);
+
+                this.createLayer(name, true);
+
+                //Set layer data
+                this.layers[layer + 1].dataRaw = new ImageData(imageData, this.width, this.height);
+                this.layers[layer + 1].blendMode = blendMode;
+                this.layers[layer + 1].alpha = alpha;
 
                 this.updateLayer(layer + 1);
                 this.setLayerVisibility(layer + 1, visibility);
@@ -2172,7 +2235,7 @@ window.artimus = {
                 //Layers : 2 bytes
                 let data = new Array(
                     ...this.magic,
-                    3,
+                    4,
                     
                     //Conver both width and height into their 3 byte components
                     (this.width & 0xff0000) >> 16,
@@ -2193,10 +2256,11 @@ window.artimus = {
                 //Encoding Mode : 1 byte
                 //Visibility    : 1 byte : Will probably be shared with individual transparency in the future
                 //Blend Mode  : 1 byte
+                //Alpha : 1 byte : snaps to, could make more precise in the future if need be (100/255)
                 //Name String : N bytes
                 //Data        : A bytes
                 for (let layerID in this.layers) {
-                    const {name, blendMode, dataRaw, visibility} = this.layers[layerID];
+                    const {name, blendMode, dataRaw, visibility, alpha} = this.layers[layerID];
                     const encodedName = this.tEncoder.encode(name);
 
                     //Get colors for determining an encoding method. See VV for a list
@@ -2222,6 +2286,7 @@ window.artimus = {
                         (visibility) ? 1 : 0,
 
                         artimus.blendModes.indexOf(blendMode) || 0,
+                        Math.max(Math.min(255, Math.floor(alpha * 255)), 0),
                         ...encodedName,
                     );
 

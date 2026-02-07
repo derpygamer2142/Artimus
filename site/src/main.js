@@ -250,7 +250,7 @@ editor.newFile = (forced) => {
 editor.fileResize = () => {
     //Simple, easy.
     new editor.modal(artimus.translate("title", "modal.resizeFile"), (contents, modal) => {
-        contents.className += " newFile-tuning resizeFile-main";
+        contents.className += " newFile-tuning popup-resizeFile";
         
         const currentPreviewHolder = document.createElement("div");
         const currentPreview = document.createElement("div");
@@ -390,28 +390,93 @@ editor.fileResize = () => {
 }
 
 artimus.layerPropertyMenu = (workspace, layer) => {
-    new editor.modal(artimus.translate("title", "modal.layerProperty").replace("[LAYER]", layer.name), [
-        { type: "dropdown", target: layer, key: "blendMode", items: [
-            { text: "Default", value: "source-over"},
-            { text: "additive", value: "lighter"},
-            { text: "multiply", value: "multiply" },
-            { text: "subtractive", value: "difference" },
+    new editor.modal(artimus.translate("title", "modal.layerProperty").replace("[LAYER]", layer.name), 
+    (contents, modal) => {
+        contents.className += " popup-layerProperties";
+        
+        const name = document.createElement("input");
+        name.type = "text";
+        name.value = layer.name;
+        name.className = "layerProperties-name";
 
-            { text: "exclude", value: "exclusion" },
+        const BMTHolder = document.createElement("div");
+        BMTHolder.className = "layerProperties-BMTHolder";
 
-            { text: "screen", value: "screen" },
-            { text: "overlay", value: "overlay" },
+        const text = document.createElement("p");
+        text.innerText = artimus.translate("transparency", "modal.layerProperty");
+        text.className = "layerProperties-transparencyText";
 
-            { text: "lighten", value: "lighten" },
-            { text: "darken", value: "darken" },
+        const blendMode = document.createElement("select");
+        blendMode.className = "layerProperties-blendMode";
 
-            { text: "burn", value: "color-burn" },
-            { text: "dodge", value: "color-dodge" },
+        const transparencyInput = document.createElement("input");
+        const transparencySlider = document.createElement("input");
+        transparencyInput.className = "layerProperties-transparencyInput";
+        transparencySlider.className = "layerProperties-transparencySlider";
 
-            { text: "soft-light", value: "soft-light"},
-            { text: "hard-light", value: "hard-light"},
-        ]}
-    ], { height: 30, translationContext: "layerProperty" });
+        const finalDiv = document.createElement("div");
+        finalDiv.className = "layerProperties-doneButtonHolder";
+
+        const doneButton = document.createElement("button");
+        doneButton.innerText = artimus.translate("done", "modal.layerProperty");
+        doneButton.className = "artimus-button";
+        
+        BMTHolder.appendChild(blendMode);
+        BMTHolder.appendChild(transparencyInput);
+        BMTHolder.appendChild(transparencySlider);
+
+        finalDiv.appendChild(doneButton);
+
+        contents.appendChild(name);
+        contents.appendChild(text);
+        contents.appendChild(BMTHolder);
+        contents.appendChild(finalDiv);
+
+        //Setup transparency
+        transparencyInput.type = "number";
+        transparencyInput.min = 0;
+        transparencyInput.max = 100;
+
+        transparencySlider.type = "range";
+        transparencySlider.min = 0;
+        transparencySlider.max = 100;
+
+        //A bit of a doozy but it works
+        const updateTransparency = (value) => {
+            value = (value !== undefined) ? Math.max(0, Math.min(100, Number(value))) : 0;
+            
+            transparencySlider.value = value;
+            transparencyInput.value = value;
+        }
+
+        transparencyInput.oninput = (event) => updateTransparency(transparencyInput.value);
+        transparencySlider.oninput = (event) => updateTransparency(transparencySlider.value);
+        updateTransparency(layer.alpha * 100);
+        
+        //Setup blendmode stuff
+        for (let modeID in artimus.blendModes) {
+            const mode = artimus.blendModes[modeID];
+            const option = document.createElement("option");
+
+            option.value = mode;
+            option.innerText = artimus.translate(mode, "blendModes");
+
+            blendMode.appendChild(option);
+        }
+
+        blendMode.value = layer.blendMode;
+
+        //Set needed attributes
+        doneButton.onclick = () => {
+            layer.alpha = (transparencyInput.value / 100);
+            if (layer.name != name.value) workspace.renameLayer(layer.name, name.value);
+            layer.blendMode = blendMode.value;
+        
+            //Finally flag for update and close
+            workspace.dirty = true;
+            modal.close();
+        }
+    }, { height: 30 });
 }
 
 artimus.translate = (item, context) => {
