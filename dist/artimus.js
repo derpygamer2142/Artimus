@@ -2482,7 +2482,7 @@ window.artimus = {
 
         importFromPC() {
             // Not yet widely available, so we will need to check we can use the file system access API
-            if (window.showSaveFilePicker) window.showOpenFilePicker({
+            if (window.showSaveFilePicker) return window.showOpenFilePicker({
                 id: "artimus_file_location",
                 multiple: false,
                 startIn: "documents",
@@ -2501,11 +2501,16 @@ window.artimus = {
                 fileInput.type = "file";
                 fileInput.accept = "image/*, .artimus";
 
-                fileInput.onchange = () => {
-                    artimus.activeWorkspaces[0].importFromImage(fileInput.files[0]);
-                };
+                const filePromise = new Promise((resolve) => {
+                    fileInput.onchange = () => {
+                        artimus.activeWorkspaces[0].importFromImage(fileInput.files[0]);
+                        resolve();
+                    };
+                    fileInput.onError = () => { console.log('file load error wow'); }
+                });
 
-                fileInput.click();                        
+                fileInput.click();
+                return filePromise;
             }
         }
 
