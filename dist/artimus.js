@@ -897,6 +897,11 @@ window.artimus = {
                         }
                     }
 
+                    if (event.key.toLowerCase() == "s" && event.ctrlKey) {
+                        event.preventDefault();
+                        this.exportToPC();
+                    }
+
                     if (event.key.toLowerCase() == "shift") { this.shiftHeld = true; }
 
                     if (this.toolFunction.keyPressed) {
@@ -1743,6 +1748,7 @@ window.artimus = {
 
             this.historyIndex = 0;
             this.layerHistory = [];
+            this.fileSystemHandle = null;
         }
         
         //Artimus Files
@@ -2316,6 +2322,9 @@ window.artimus = {
             "artimus": "readAsArrayBuffer"
         };
 
+        // Will be set upon file save/load
+        fileSystemHandle = null;
+
         importFromPC(image) {
             let extension = image.name.split(".");
             extension = extension[extension.length - 1];
@@ -2367,14 +2376,59 @@ window.artimus = {
             });
         }
 
-        exportToPC(format) {
+        exportToPC(format, forceDialogue) {
             format = format || "artimus";
 
-            const link = document.createElement("a");
             this.export(format).then(value => {
-                link.href = value;
-                link.download = `picture.${format}`;
-                link.click();
+                // Not yet widely available, so we will need to check we can use the file system access API
+                if (Object.prototype.hasOwnProperty.call(window, "showSaveFilePicker")) {
+                    // Fetch the dataURL to convert it to a byte stream
+                    fetch(value).then(response => response.arrayBuffer().then(async buffer => {
+                        let fileName;
+                        if (this.fileSystemHandle) fileName = (await this.fileSystemHandle.getFile()).name;
+
+                        // Show the file system handle in the following conditions:
+                        // The handle doesn't yet exist, so either we haven't saved yet or it hasn't been imported
+                        // We want to force the dialogue, such as for changing the save location
+                        // The file that the handle is pointing to is different than what we are saving, such as exporting a png
+                        if (!this.fileSystemHandle || forceDialogue || fileName.slice(fileName.lastIndexOf(".")+1) !== format) {
+                            window.showSaveFilePicker({
+                                id: "artimus_file_location",
+                                startIn: "documents",
+                                suggestedName: `picture.${format}`,
+                                types: [
+                                    {
+                                        accept: {
+                                            "image/*": ["." + format]
+                                        }
+                                    }
+                                ]
+                            }).then(fsHandle => {
+                                // Reuse the handler for .artimus files for convenience
+                                if (format === "artimus") this.fileSystemHandle = fsHandle;
+                                fsHandle.createWritable().then(async writableStream => {
+                                    await writableStream.write(buffer);
+                                    await writableStream.close();
+                                });
+                            });
+                        }
+                        else {
+                            this.fileSystemHandle.createWritable().then(async writableStream => {
+                                await writableStream.write(buffer);
+                                await writableStream.close();
+                            });
+                        }
+
+                    }));
+                }
+                else {
+                    // This browser doesn't support saving with a file system dialogue
+                    const link = document.createElement("a");
+                    link.href = value;
+                    link.download = `picture.${format}`;
+                    link.click();
+                }
+
             });
         }
     },
