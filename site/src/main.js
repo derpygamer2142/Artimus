@@ -394,6 +394,9 @@ artimus.layerPropertyMenu = (workspace, layer) => {
     (contents, modal) => {
         contents.className += " popup-layerProperties";
         
+        const nameHolder = document.createElement("div");
+        nameHolder.className = "layerProperties-CenterHolder layerProperties-NameHolder";
+
         const name = document.createElement("input");
         name.type = "text";
         name.value = layer.name;
@@ -409,6 +412,9 @@ artimus.layerPropertyMenu = (workspace, layer) => {
         const blendMode = document.createElement("select");
         blendMode.className = "layerProperties-blendMode";
 
+        const blendModeHolder = document.createElement("div");
+        blendModeHolder.className = "layerProperties-CenterHolder layerProperties-BlendModeHolder";
+
         const transparencyInput = document.createElement("input");
         const transparencySlider = document.createElement("input");
         transparencyInput.className = "layerProperties-transparencyInput";
@@ -420,15 +426,18 @@ artimus.layerPropertyMenu = (workspace, layer) => {
         const doneButton = document.createElement("button");
         doneButton.innerText = artimus.translate("done", "modal.layerProperty");
         doneButton.className = "artimus-button";
+
+        nameHolder.appendChild(name);
+        blendModeHolder.appendChild(blendMode);
         
-        BMTHolder.appendChild(blendMode);
         BMTHolder.appendChild(transparencyInput);
         BMTHolder.appendChild(transparencySlider);
 
         finalDiv.appendChild(doneButton);
 
-        contents.appendChild(name);
+        contents.appendChild(nameHolder);
         contents.appendChild(text);
+        contents.appendChild(blendModeHolder);
         contents.appendChild(BMTHolder);
         contents.appendChild(finalDiv);
 
@@ -480,6 +489,8 @@ artimus.layerPropertyMenu = (workspace, layer) => {
 }
 
 artimus.translate = (item, context) => {
+    if (!editor.language[`artimus.${context}.${item}`]) console.warn(`Translation key "${`artimus.${context}.${item}`}" is missing!`);
+
     const translated = (editor.language[`artimus.${context}.${item}`] || `artimus.${context}.${item}`);
     if (Array.isArray(translated)) return translated.join("\n");
     return translated;

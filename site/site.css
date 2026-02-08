@@ -404,7 +404,7 @@ cugi-dropdown:active {
 .layerProperties-BMTHolder {
     display: grid;
     margin: 4px;
-    grid-template-columns: 30% 20% 50%;
+    grid-template-columns: 30% 70%;
 }
 
 .popup-layerProperties {
@@ -412,6 +412,13 @@ cugi-dropdown:active {
 
     display: flex;
     flex-direction: column;
+}
+
+.layerProperties-CenterHolder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .layerProperties-doneButtonHolder {
