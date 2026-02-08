@@ -100,5 +100,13 @@
     "artimus.modal.newFile.create": "Create!",
 
     "artimus.modal.resizeFile.title": "Resize",
-    "artimus.modal.resizeFile.resize": "Resize!"
+    "artimus.modal.resizeFile.resize": "Resize!",
+
+    "artimus.modal.exportFile.title": "Export File",
+    "artimus.modal.exportFile.preferred": "(Preferred)",
+
+    "artimus.modal.settings.title": "Settings",
+    "artimus.modal.settings.theme": "Theme",
+    "artimus.modal.settings.maxHistory": "History Length",
+    "artimus.modal.settings.preferredFormat": "Preferred Format"
 }

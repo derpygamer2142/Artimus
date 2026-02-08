@@ -1,6 +1,7 @@
 editor.settings = {
     theme: "default",
-    maxHistory: 10
+    maxHistory: 10,
+    preferredFormat: "png"
 };
 
 editor.saveSettings = () => localStorage.setItem("settings", JSON.stringify(editor.settings));
@@ -22,6 +23,9 @@ editor.settingDefs = {
         {type: "int", target: editor.settings, key: "maxHistory", min: 1, max: 50, onchange: (value) => {
             artimus.maxHistory = value;
             editor.saveSettings();
+        }},
+        {type: "dropdown", target: editor.settings, key: "preferredFormat", items: Object.keys(artimus.extensionToMIME), onchange: () => {
+            editor.saveSettings();
         }}
     ]
 };
@@ -40,5 +44,10 @@ if (localStorage.getItem("settings")) {
 }
 
 editor.settingsPage = () => {
-    new editor.modal("Settings", editor.settingDefs.general);
+    //Do some cool stuff
+    new editor.modal(
+        artimus.translate("title", "modal.newFile"), 
+        editor.settingDefs.general, 
+        { translationContext: "settings" }
+    );
 }
