@@ -2381,7 +2381,7 @@ window.artimus = {
 
             this.export(format).then(value => {
                 // Not yet widely available, so we will need to check we can use the file system access API
-                if (Object.prototype.hasOwnProperty.call(window, "showSaveFilePicker")) {
+                if (window.showSaveFilePicker) {
                     // Fetch the dataURL to convert it to a byte stream
                     fetch(value).then(response => response.arrayBuffer().then(async buffer => {
                         let fileName;
